@@ -6,7 +6,6 @@ import os
 
 import user
 
-__author__ = 'jan'
 
 def get_passwd(filename):
     """Read the username/passwd from an extra file.

@@ -1,7 +1,5 @@
 import phpserialize
 
-__author__ = 'jan'
-
 GUEST_MASK = [2]
 
 class ForumPermissions(object):
