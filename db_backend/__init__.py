@@ -1,6 +1,6 @@
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import scoped_session, sessionmaker, relationship
 from sqlalchemy.sql import ColumnCollection
 import os
 
@@ -79,3 +79,35 @@ class DbForums(Base):
                 forums.append(forum)
 
         return forums
+
+
+class DbMembers(Base):
+    """This handles the ipb_members data within the exma ipb database
+    """
+    props = ColumnCollection(Column('id', Integer, primary_key=True))
+    __table__ = Table('ipb_members', meta, *props, autoload=True)
+
+    converge = relationship("DbMembersConverge", uselist=False)
+
+    def password_valid(self, password):
+        """Check if a given password is the password of the user.
+
+        :type password: str or unicode
+        :param password: The password to check.
+        :rtype: bool
+        :return: True if the password is correct.
+        """
+        reference_hash = self.converge.converge_pass_hash
+        if reference_hash is not None:
+            salt = self.converge.converge_pass_salt
+            hash = user.exma_passhash(password, salt)
+            return hash == reference_hash
+        return False
+
+
+class DbMembersConverge(Base):
+    """Holds the password hash & salt (table ipb_members_converge)
+    """
+    props = ColumnCollection(Column('converge_id', Integer, ForeignKey("ipb_members.id"), primary_key=True))
+    __table__ = Table('ipb_members_converge', meta, *props, autoload=True)
+

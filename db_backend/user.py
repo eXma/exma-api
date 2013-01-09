@@ -1,3 +1,4 @@
+import hashlib
 import phpserialize
 
 GUEST_MASK = [2]
@@ -59,4 +60,24 @@ def parse_permissions(permission_array):
                 except ValueError:
                     pass
     return parsed
+
+def exma_passhash(password, salt):
+    """Generate a ipb-compatible password hash.
+
+    The passwords from the ipb are salted and triple md5'ed (because doing
+    rot13 twice is more secure!). It can be seen as:
+    >>> md5( md5(salt) + md5(password) )
+    For md5() functions that kake a str or unicode and get the result in
+    hex representation back.
+
+    :param password: The plain password.
+    :type password: str or unicode
+    :param salt: The plain salt.
+    :type salt: str or unicode
+    :return: The salted hash.
+    :rtype: str
+    """
+    password_hash = hashlib.md5(password).hexdigest()
+    salt_hash = hashlib.md5(salt).hexdigest()
+    return hashlib.md5(salt_hash + password_hash).hexdigest()
 
