@@ -81,7 +81,7 @@ class DbForums(Base):
         return forums
 
 
-class DbMembers(Base):
+class DbMembers(Base, user.ApiUser):
     """This handles the ipb_members data within the exma ipb database
     """
     props = ColumnCollection(Column('id', Integer, primary_key=True))
@@ -104,10 +104,54 @@ class DbMembers(Base):
             return hash == reference_hash
         return False
 
-    def is_banned(self):
-        ban = user.UserBan.from_banline(self.temp_ban)
-        return ban is not None and ban.is_active()
+    @property
+    def ban(self):
+        """Get the parsed UserBan object or None if none.
 
+        :rtype: UserBan or None
+        :return: The instance or None
+        """
+        if not hasattr(self, "_ban"):
+            self._ban = user.UserBan.from_banline(self.temp_ban)
+        return self._ban
+
+    def is_banned(self):
+        """Tells if the user is currently banned.
+
+        :rtype: bool
+        :return: True if banned
+        """
+        return self.ban is not None and self.ban.is_active()
+
+    @staticmethod
+    def by_name(username):
+        """Get a user by its username
+
+        :type username: str or unicode
+        :param username: The username to search for.
+        :rtype: DbMembers or None
+        :return: The found User or None.
+        """
+        return session.query(DbMembers).filter_by(name=username).first()
+
+    @staticmethod
+    def by_id(user_id):
+        """Get a user by its id
+
+        :type user_id: int
+        :param user_id: The id of the user.
+        :rtype: DbMembers or None
+        :return: The found User or None.
+        """
+        return session.query(DbMembers).filter_by(id=user_id).first()
+
+    def authenticated(self):
+        """Tells if the user was authenticated.
+
+        :rtype: bool
+        :return: True if so.
+        """
+        return not self.is_banned()
 
 
 class DbMembersConverge(Base):

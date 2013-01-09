@@ -80,8 +80,8 @@ def exma_passhash(password, salt):
     :return: The salted hash.
     :rtype: str
     """
-    password_hash = hashlib.md5(password).hexdigest()
-    salt_hash = hashlib.md5(salt).hexdigest()
+    password_hash = hashlib.md5(password.encode("latin1")).hexdigest()
+    salt_hash = hashlib.md5(salt.encode("latin1")).hexdigest()
     return hashlib.md5(salt_hash + password_hash).hexdigest()
 
 
@@ -135,3 +135,14 @@ class UserBan(object):
                 except ValueError:
                     pass
         return None
+
+
+class ApiUser(object):
+    """A dummy mixin to implement anonymous users.
+    """
+    def authenticated(self):
+        """tells if the user is authentiated.
+
+        :return: False for this implementation
+        """
+        return False

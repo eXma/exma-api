@@ -6,6 +6,7 @@ from flask.ext import restful
 from functools import wraps
 
 import db_backend
+import user_ressources
 
 def charset_fix_decorator(response_func):
     """Fix the output mime-type by adding the charset information.
@@ -30,6 +31,7 @@ def shutdown_session(exception=None):
     """
     db_backend.session.remove()
 
+user_ressources.setup_auth(app, api)
 
 @api.representation('application/json')
 def unicode_json_representation(data, code, headers=None):
@@ -48,6 +50,8 @@ def unicode_json_representation(data, code, headers=None):
 @app.route('/')
 def start():
     return 'eXma REST API!'
+
+
 
 def limit_query(query, req_args):
     limit = req_args.get("limit")
@@ -77,6 +81,8 @@ class TopicList(restful.Resource):
         topics = OrderedDict([(t.tid, t.title) for t in topic_qry])
 
         return topics
+
+
 
 
 api.add_resource(TopicList, "/topics")
