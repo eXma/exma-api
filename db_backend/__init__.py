@@ -104,6 +104,11 @@ class DbMembers(Base):
             return hash == reference_hash
         return False
 
+    def is_banned(self):
+        ban = user.UserBan.from_banline(self.temp_ban)
+        return ban is not None and ban.is_active()
+
+
 
 class DbMembersConverge(Base):
     """Holds the password hash & salt (table ipb_members_converge)

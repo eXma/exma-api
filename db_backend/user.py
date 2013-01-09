@@ -1,5 +1,7 @@
 import hashlib
+import datetime
 import phpserialize
+import sys
 
 GUEST_MASK = [2]
 
@@ -82,3 +84,54 @@ def exma_passhash(password, salt):
     salt_hash = hashlib.md5(salt).hexdigest()
     return hashlib.md5(salt_hash + password_hash).hexdigest()
 
+
+class UserBan(object):
+    def __init__(self, start, end, duration):
+        """Creates an instance.
+
+        :type start: datetime
+        :param start: The start of the Ban.
+        :type end: datetime
+        :param end: The end of the Ban.
+        :type duration: timedelta
+        :param duration: The duration of the Ban.
+        """
+        self.start = start
+        self.end = end
+        self.duration = duration
+
+    def is_active(self):
+        """Tells if the ban is currently active.
+
+        :rtype: bool
+        :return: True if active, false else.
+        """
+        return self.start < datetime.datetime.now() < self.end
+
+    @staticmethod
+    def from_banline(db_temp_ban):
+        """Parses a user temp_ban line from the db and create a UserBan instance
+
+        :type db_temp_ban: str or unicode
+        :param db_temp_ban:
+        :rtype: UserBan or None
+        :return: A UserBan instance or None if the line was not set/malformed
+        """
+        if db_temp_ban is not None and str(db_temp_ban) != "0":
+            ban_parts = db_temp_ban.split(":")
+            if len(ban_parts) == 4:
+                try:
+                    start = datetime.datetime.fromtimestamp(int(ban_parts[0]))
+                    if float(ban_parts[1]) < sys.maxint:
+                        end = datetime.datetime.fromtimestamp(int(ban_parts[1]))
+                        duration_hours = ban_parts[2]
+                        if ban_parts[3] == "d":
+                            duration_hours = duration_hours * 24
+                        duration = datetime.timedelta(hours=duration_hours)
+                    else:
+                        end = datetime.datetime(year=datetime.MAXYEAR, day=31, month=12)
+                        duration = end - start
+                    return UserBan(start, end, duration)
+                except ValueError:
+                    pass
+        return None
