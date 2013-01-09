@@ -61,6 +61,7 @@ def parse_permissions(permission_array):
                     pass
     return parsed
 
+
 def exma_passhash(password, salt):
     """Generate a ipb-compatible password hash.
 

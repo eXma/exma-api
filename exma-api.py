@@ -1,5 +1,5 @@
 from json import dumps
-from flask import Flask, make_response, g
+from flask import Flask, make_response, g, session
 from collections import OrderedDict
 from flask.ext.restful import fields, marshal_with, abort, reqparse
 from flask.ext import restful
@@ -20,6 +20,8 @@ def charset_fix_decorator(response_func):
     return wrapper
 
 app = Flask(__name__)
+Flask.secret_key = r"af4thei1VaongahB7eiloo]Push@ieZohz{ohjo?w&ahxaegh2zood0rie3i"
+
 api = restful.Api(app, decorators=[charset_fix_decorator])
 
 @app.teardown_request
@@ -70,7 +72,7 @@ class TopicList(restful.Resource):
         guest_forum_ids = [f.id for f in guest_forums]
 
         topic_qry = db_backend.session.query(db_backend.DbTopics).filter(
-            db_backend.DbTopics.forum_id.in_(guest_forum_ids)).order_by(db_backend.DbTopics.last_post.desc()).limit(100)
+            db_backend.DbTopics.forum_id.in_(guest_forum_ids)).filter_by(approved=1).order_by(db_backend.DbTopics.last_post.desc()).limit(100)
         topic_qry = limit_query(topic_qry, args)
         topics = OrderedDict([(t.tid, t.title) for t in topic_qry])
 
