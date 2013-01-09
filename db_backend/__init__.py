@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, MetaData, Table, Column, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.sql import ColumnCollection
-import phpserialize
+import os
 
 import user
 
@@ -20,13 +20,14 @@ def get_passwd(filename):
     try:
         with open(filename, "r") as f:
             pw = f.read()
-    except :
+    except Exception as e:
         pass
     return pw
 
+pw_file = os.path.join(os.path.dirname(__file__), "..", "exma_pw")
 
 Base = declarative_base()
-engine = create_engine('mysql://%s@127.0.0.1/exma?charset=utf8' % get_passwd("exma_pw"))
+engine = create_engine('mysql://%s@127.0.0.1/exma?charset=utf8' % get_passwd(pw_file))
 meta = MetaData(bind=engine)
 #session = None
 session = scoped_session(sessionmaker(bind=engine))
