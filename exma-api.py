@@ -1,5 +1,5 @@
 from json import dumps
-from flask import Flask, make_response
+from flask import Flask, make_response, g
 from collections import OrderedDict
 from flask.ext.restful import fields, marshal_with, abort, reqparse
 from flask.ext import restful
@@ -47,15 +47,31 @@ def unicode_json_representation(data, code, headers=None):
 def start():
     return 'eXma REST API!'
 
+def limit_query(query, req_args):
+    limit = req_args.get("limit")
+    offset = req_args.get("offset")
+    if limit is not None and limit > 0:
+        query = query.limit(limit)
+    if offset is not None and offset > 0:
+        query = query.offset(offset)
+    return query
+
+
 
 class TopicList(restful.Resource):
     def get(self, forum_id=None):
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('limit', type=int)
+        parser.add_argument('offset', type=int)
+        args = parser.parse_args()
+
         guest_forums = db_backend.DbForums.guest_readable()
         guest_forum_ids = [f.id for f in guest_forums]
 
         topic_qry = db_backend.session.query(db_backend.DbTopics).filter(
             db_backend.DbTopics.forum_id.in_(guest_forum_ids)).order_by(db_backend.DbTopics.last_post.desc()).limit(100)
-
+        topic_qry = limit_query(topic_qry, args)
         topics = OrderedDict([(t.tid, t.title) for t in topic_qry])
 
         return topics
