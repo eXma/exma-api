@@ -146,3 +146,7 @@ class ApiUser(object):
         :return: False for this implementation
         """
         return False
+
+    @property
+    def perm_masks(self):
+        return GUEST_MASK

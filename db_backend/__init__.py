@@ -35,8 +35,18 @@ session = scoped_session(sessionmaker(bind=engine))
 class DbTopics(Base):
     """This handles the ipb_topics data within the exma ipb database
     """
-    __table__ = Table('ipb_topics', meta, autoload=True)
+    props = ColumnCollection(Column('tid', Integer, primary_key=True), Column('forum_id', Integer, ForeignKey("ipb_forums.id")))
+    __table__ = Table('ipb_topics', meta, *props, autoload=True)
 
+    forum = relationship("DbForums")
+
+    @staticmethod
+    def by_id(topic_id, user_mask_tuple):
+        topic = session.query(DbTopics).filter_by(tid=topic_id).filter_by(approved=1).first()
+        if topic is not None:
+            if topic.forum.can_read(user_mask_tuple):
+                return topic
+        return None
 
 class DbForums(Base):
     """This handles the ipb_forum data within the exma ipb database.
@@ -79,6 +89,15 @@ class DbForums(Base):
                 forums.append(forum)
 
         return forums
+
+
+class DbPosts(Base):
+    props = ColumnCollection(Column('pid', Integer, primary_key=True))
+    __table__ = Table('ipb_posts', meta, *props, autoload=True)
+
+    @staticmethod
+    def by_topic_query(topic_id):
+        return session.query(DbPosts).filter_by(topic_id=topic_id).order_by(DbPosts.post_date.desc()).filter_by(queued=0)
 
 
 class DbMembers(Base, user.ApiUser):

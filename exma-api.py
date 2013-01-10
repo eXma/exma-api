@@ -4,6 +4,7 @@ from collections import OrderedDict
 from flask.ext.restful import fields, marshal_with, abort, reqparse
 from flask.ext import restful
 from functools import wraps
+from sqlalchemy.orm.exc import NoResultFound
 
 import db_backend
 import user_ressources
@@ -44,6 +45,7 @@ def unicode_json_representation(data, code, headers=None):
     """
     resp = make_response(dumps(data, ensure_ascii=False), code)
     resp.headers.extend(headers or {})
+    resp.headers["Access-Control-Allow-Origin"] = "*"
     return resp
 
 
@@ -62,9 +64,17 @@ def limit_query(query, req_args):
         query = query.offset(offset)
     return query
 
+topic_fields = {
+    'tid': fields.Integer,
+    'title': fields.String,
+    'last_post': fields.String,
+    'last_poster_name': fields.String,
+    'starter_name': fields.String
+}
 
 
 class TopicList(restful.Resource):
+    @marshal_with(topic_fields)
     def get(self, forum_id=None):
 
         parser = reqparse.RequestParser()
@@ -78,14 +88,43 @@ class TopicList(restful.Resource):
         topic_qry = db_backend.session.query(db_backend.DbTopics).filter(
             db_backend.DbTopics.forum_id.in_(guest_forum_ids)).filter_by(approved=1).order_by(db_backend.DbTopics.last_post.desc()).limit(100)
         topic_qry = limit_query(topic_qry, args)
-        topics = OrderedDict([(t.tid, t.title) for t in topic_qry])
+
+        topics = topic_qry.all()
 
         return topics
+
+post_fields = {
+    'pid': fields.Integer,
+    'post': fields.String,
+    'author_name': fields.String,
+    'post_date': fields.String,
+}
+
+class PostList(restful.Resource):
+    @marshal_with(post_fields)
+    def get(self, topic_id):
+        topic = db_backend.DbTopics.by_id(topic_id, user_ressources.current_user.perm_masks)
+        if topic is None:
+            abort(404, message="No topic with this id available")
+
+        posts = db_backend.DbPosts.by_topic_query(topic_id).limit(40)
+        return posts.all()
+
+
+class Topic(restful.Resource):
+    @marshal_with(topic_fields)
+    def get(self, topic_id):
+        topic = db_backend.DbTopics.by_id(topic_id, user_ressources.current_user.perm_masks)
+        if topic is None:
+            abort(404, message="No topic with this id available")
+        return topic
 
 
 
 
 api.add_resource(TopicList, "/topics")
+api.add_resource(Topic, "/topic/<int:topic_id>")
+api.add_resource(PostList, "/topic/<int:topic_id>/posts")
 
 if __name__ == '__main__':
     app.debug = True
