@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import scoped_session, sessionmaker, relationship
+from sqlalchemy.orm import scoped_session, sessionmaker, relationship, backref
 from sqlalchemy.sql import ColumnCollection
 import os
 
@@ -39,6 +39,7 @@ class DbTopics(Base):
     __table__ = Table('ipb_topics', meta, *props, autoload=True)
 
     forum = relationship("DbForums")
+    all_posts = relationship("DbPosts", backref=backref('topic'))
 
     @staticmethod
     def by_id(topic_id, user_mask_tuple):
@@ -94,7 +95,8 @@ class DbForums(Base):
 class DbPosts(Base):
     """Handle the post data from the database (table: ipb_posts).
     """
-    props = ColumnCollection(Column('pid', Integer, primary_key=True))
+    props = ColumnCollection(Column('pid', Integer, primary_key=True),
+                             Column('topic_id', Integer))
     __table__ = Table('ipb_posts', meta, *props, autoload=True)
 
     @staticmethod
