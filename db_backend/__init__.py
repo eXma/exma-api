@@ -92,12 +92,54 @@ class DbForums(Base):
 
 
 class DbPosts(Base):
+    """Handle the post data from the database (table: ipb_posts).
+    """
     props = ColumnCollection(Column('pid', Integer, primary_key=True))
     __table__ = Table('ipb_posts', meta, *props, autoload=True)
 
     @staticmethod
     def by_topic_query(topic_id):
         return session.query(DbPosts).filter_by(topic_id=topic_id).order_by(DbPosts.post_date.desc()).filter_by(queued=0)
+
+
+class DbEvents(Base):
+    """Handle the events data in the database (table: exma_events).
+    """
+    props = ColumnCollection(Column('event_id', Integer, ForeignKey("ipb_topics.tid"),primary_key=True),
+                             Column('location_id', Integer, ForeignKey("exma_locations.lid")))
+    __table__ = Table('exma_events', meta, *props, autoload=True)
+
+    topic = relationship("DbTopics", uselist=False)
+    location = relationship("DbLocations", uselist=False)
+
+    all_categories = {
+        0: u"Keine",
+        1: u"Party",
+        2: u"Kunst oder Kultur",
+        3: u"Kneipe oder Club",
+        4: u"Freizeit oder Erholung",
+        5: u"Studentenclubs",
+        6: u"Dresdner Studententage",
+        7: u"Forschung und Wissen"
+    }
+
+    @property
+    def category_name(self):
+        """Get the name of the category of the event.
+
+        :rtype: unicode
+        :return: The Category name
+        """
+        if self.category in self.all_categories:
+            return self.all_categories[self.category]
+        return "(unknown)"
+
+
+class DbLocations(Base):
+    """Handle the location data for the events from the database (table: exma_locations).
+    """
+    props = ColumnCollection(Column('lid', Integer, primary_key=True))
+    __table__ = Table('exma_locations', meta, *props, autoload=True)
 
 
 class DbMembers(Base, user.ApiUser):
