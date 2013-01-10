@@ -96,7 +96,7 @@ class DbPosts(Base):
     """Handle the post data from the database (table: ipb_posts).
     """
     props = ColumnCollection(Column('pid', Integer, primary_key=True),
-                             Column('topic_id', Integer))
+                             Column('topic_id', Integer, ForeignKey("ipb_topics.tid")))
     __table__ = Table('ipb_posts', meta, *props, autoload=True)
 
     @staticmethod
