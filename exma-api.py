@@ -123,9 +123,9 @@ class Topic(restful.Resource):
 
 
 api.add_resource(TopicList, "/topics")
-api.add_resource(Topic, "/topic/<int:topic_id>")
-api.add_resource(PostList, "/topic/<int:topic_id>/posts")
+api.add_resource(Topic, "/topics/<int:topic_id>")
+api.add_resource(PostList, "/topics/<int:topic_id>/posts")
 
 if __name__ == '__main__':
     app.debug = True
-    app.run()
+    app.run("0.0.0.0")
