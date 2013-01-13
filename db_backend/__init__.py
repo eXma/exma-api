@@ -154,6 +154,10 @@ class DbPixAlbums(Base):
     location = relationship("DbLocations", uselist=False)
     thumbnail = relationship("DbPixPics", uselist=False, foreign_keys="DbPixAlbums.thumb_id", lazy="joined")
 
+    @staticmethod
+    def by_id(album_id):
+        return session.query(DbPixAlbums).filter_by(a_id=album_id).first()
+
 
 class DbPixComments(Base):
     props = ColumnCollection(Column('msg_id', Integer, primary_key=True),
@@ -180,7 +184,7 @@ class DbPixPics(Base):
     props = ColumnCollection(Column('pid', Integer, primary_key=True),
                              Column('aid', Integer, ForeignKey('pixma_album.a_id')))
     __table__ = Table('pixma_pics', meta, *props, autoload=True)
-    picture_url_base = "http://www.exmatrikulationsamt.de/piXma_"
+    picture_url_base = "/piXma/"
 
     album = relationship("DbPixAlbums", backref=backref("pictures"), foreign_keys="DbPixPics.aid")
 
@@ -195,6 +199,10 @@ class DbPixPics(Base):
     @property
     def thumb_url(self):
         return "%s%s_bt.jpg" % (self.picture_url_base, self.pid)
+
+    @staticmethod
+    def by_id(pic_id):
+        return session.query(DbPixPics).filter_by(pid=pic_id).first()
 
 
 class DbMembers(Base, user.ApiUser):

@@ -1,3 +1,4 @@
+from functools import wraps
 from flask import Flask, make_response, g, session, _request_ctx_stack
 from flask.ext.restful import fields, marshal_with, abort, reqparse
 from flask.ext import restful
@@ -5,6 +6,9 @@ from werkzeug.local import LocalProxy
 
 import db_backend
 from db_backend.user import ApiUser
+
+
+debug = False
 
 current_user = LocalProxy(lambda: _request_ctx_stack.top.user)
 
@@ -35,6 +39,7 @@ class Login(restful.Resource):
 
         return {"message": u"Successfull logged in"}
 
+
 class Logout(restful.Resource):
     def get(self):
         if not current_user.authenticated():
@@ -42,6 +47,16 @@ class Logout(restful.Resource):
 
         del session["login_user_id"]
         return {"message": u"Successfull logged out"}
+
+
+
+def require_login(func):
+    @wraps(func)
+    def nufun(*args, **kwargs):
+        if not (debug or current_user.authenticated()):
+            abort(401, message="authentication required")
+        return func(*args, **kwargs)
+    return nufun
 
 
 def setup_auth(app, api):

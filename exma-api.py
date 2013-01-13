@@ -1,10 +1,11 @@
 from json import dumps
-from flask import Flask, make_response, g, session
+from flask import Flask, make_response, g, session, send_from_directory
 from collections import OrderedDict
 from flask.ext.restful import fields, marshal_with, abort, reqparse
 from flask.ext import restful
 from functools import wraps
 from sqlalchemy.orm.exc import NoResultFound
+import os
 
 import db_backend
 import user_ressources
@@ -52,6 +53,30 @@ def unicode_json_representation(data, code, headers=None):
 @app.route('/')
 def start():
     return 'eXma REST API!'
+
+
+@app.route("/piXma/<int:pic_id>.jpg", defaults={"type_string": None})
+@app.route("/piXma/<int:pic_id>_<string:type_string>.jpg")
+@user_ressources.require_login
+def send_picture(pic_id, type_string):
+    pic = db_backend.DbPixPics.by_id(pic_id)
+    if pic is None:
+        abort(404)
+
+    filename = "%d.jpg" % pic_id
+    if type_string is not None:
+        if type_string not in ("st", "bt"):
+            abort(404)
+        filename = "%d_%s.jpg" % (pic_id, type_string)
+    else:
+        pic.hits += 1
+        db_backend.session.commit()
+
+    filepath = os.path.join("/mnt/tmp", filename)
+    if not os.path.isfile(filepath):
+        abort(404)
+
+    return send_from_directory("/mnt/tmp", filename)
 
 
 
@@ -133,11 +158,12 @@ album_fields = {
     'id': fields.Integer(attribute="a_id"),
     'title': fields.String,
     'thumbnail': fields.Nested(picture_fileds),
-    'post_date': fields.String,
+    'date': fields.String(attribute="a_date"),
     }
 
 
 class AlbumList(restful.Resource):
+    @user_ressources.require_login
     @marshal_with(album_fields)
     def get(self):
 
@@ -152,6 +178,27 @@ class AlbumList(restful.Resource):
         return albums_qry.all()
 
 
+class Album(restful.Resource):
+    @user_ressources.require_login
+    @marshal_with(album_fields)
+    def get(self, album_id):
+        album = db_backend.DbPixAlbums.by_id(album_id)
+        if album is None:
+            return abort(404, message="Album not found")
+        return album
+
+
+class PictureList(restful.Resource):
+    @user_ressources.require_login
+    @marshal_with(picture_fileds)
+    def get(self, album_id):
+        album = db_backend.DbPixAlbums.by_id(album_id)
+        if album is None:
+            abort(404, message="album not found")
+
+        return album.pictures
+
+
 
 api.add_resource(TopicList, "/topics")
 api.add_resource(Topic, "/topics/<int:topic_id>")
@@ -159,8 +206,11 @@ api.add_resource(PostList, "/topics/<int:topic_id>/posts")
 
 
 api.add_resource(AlbumList, "/albums")
+api.add_resource(Album, "/albums/<int:album_id>")
+api.add_resource(PictureList, "/albums/<int:album_id>/pictures")
 
 
 if __name__ == '__main__':
-    app.debug = True
+    #user_ressources.debug = True
+    #app.debug = True
     app.run("0.0.0.0")
