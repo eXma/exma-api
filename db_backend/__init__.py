@@ -49,6 +49,7 @@ class DbTopics(Base):
                 return topic
         return None
 
+
 class DbForums(Base):
     """This handles the ipb_forum data within the exma ipb database.
     """
@@ -142,6 +143,27 @@ class DbLocations(Base):
     """
     props = ColumnCollection(Column('lid', Integer, primary_key=True))
     __table__ = Table('exma_locations', meta, *props, autoload=True)
+
+
+class DbPixAlbums(Base):
+    props = ColumnCollection(Column('a_id', Integer, primary_key=True))
+    __table__ = Table('pixma_album', meta, *props, autoload=True)
+
+
+class DbPixComments(Base):
+    props = ColumnCollection(Column('msg_id', Integer, primary_key=True))
+    __table__ = Table('pixma_comments', meta, *props, autoload=True)
+
+
+class DbPixPeople(Base):
+    props = ColumnCollection(Column('user', Integer, primary_key=True),
+                             Column('picture_id', Integer, primary_key=True),)
+    __table__ = Table('pixma_people', meta, *props, autoload=True)
+
+
+class DbPixPics(Base):
+    props = ColumnCollection(Column('pid', Integer, primary_key=True))
+    __table__ = Table('pixma_pics', meta, *props, autoload=True)
 
 
 class DbMembers(Base, user.ApiUser):
