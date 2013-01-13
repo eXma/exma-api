@@ -13,6 +13,7 @@ import user_ressources
 def charset_fix_decorator(response_func):
     """Fix the output mime-type by adding the charset information.
     """
+
     @wraps(response_func)
     def wrapper(*args, **kwargs):
         response = response_func(*args, **kwargs)
@@ -79,7 +80,6 @@ def send_picture(pic_id, type_string):
     return send_from_directory("/mnt/tmp", filename)
 
 
-
 def limit_query(query, req_args):
     limit = req_args.get("limit")
     offset = req_args.get("offset")
@@ -101,7 +101,6 @@ topic_fields = {
 class TopicList(restful.Resource):
     @marshal_with(topic_fields)
     def get(self, forum_id=None):
-
         parser = reqparse.RequestParser()
         parser.add_argument('limit', type=int)
         parser.add_argument('offset', type=int)
@@ -111,7 +110,8 @@ class TopicList(restful.Resource):
         guest_forum_ids = [f.id for f in guest_forums]
 
         topic_qry = db_backend.session.query(db_backend.DbTopics).filter(
-            db_backend.DbTopics.forum_id.in_(guest_forum_ids)).filter_by(approved=1).order_by(db_backend.DbTopics.last_post.desc()).limit(100)
+            db_backend.DbTopics.forum_id.in_(guest_forum_ids)).filter_by(approved=1).order_by(
+            db_backend.DbTopics.last_post.desc()).limit(100)
         topic_qry = limit_query(topic_qry, args)
 
         topics = topic_qry.all()
@@ -159,14 +159,13 @@ album_fields = {
     'title': fields.String,
     'thumbnail': fields.Nested(picture_fileds),
     'date': fields.String(attribute="a_date"),
-    }
+}
 
 
 class AlbumList(restful.Resource):
     @user_ressources.require_login
     @marshal_with(album_fields)
     def get(self):
-
         parser = reqparse.RequestParser()
         parser.add_argument('limit', type=int)
         parser.add_argument('offset', type=int)
@@ -199,16 +198,13 @@ class PictureList(restful.Resource):
         return album.pictures
 
 
-
 api.add_resource(TopicList, "/topics")
 api.add_resource(Topic, "/topics/<int:topic_id>")
 api.add_resource(PostList, "/topics/<int:topic_id>/posts")
 
-
 api.add_resource(AlbumList, "/albums")
 api.add_resource(Album, "/albums/<int:album_id>")
 api.add_resource(PictureList, "/albums/<int:album_id>/pictures")
-
 
 if __name__ == '__main__':
     #user_ressources.debug = True

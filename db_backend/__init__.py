@@ -35,7 +35,8 @@ session = scoped_session(sessionmaker(bind=engine))
 class DbTopics(Base):
     """This handles the ipb_topics data within the exma ipb database
     """
-    props = ColumnCollection(Column('tid', Integer, primary_key=True), Column('forum_id', Integer, ForeignKey("ipb_forums.id")))
+    props = ColumnCollection(Column('tid', Integer, primary_key=True),
+                             Column('forum_id', Integer, ForeignKey("ipb_forums.id")))
     __table__ = Table('ipb_topics', meta, *props, autoload=True)
 
     forum = relationship("DbForums")
@@ -102,13 +103,14 @@ class DbPosts(Base):
 
     @staticmethod
     def by_topic_query(topic_id):
-        return session.query(DbPosts).filter_by(topic_id=topic_id).order_by(DbPosts.post_date.desc()).filter_by(queued=0)
+        return session.query(DbPosts).filter_by(topic_id=topic_id).order_by(DbPosts.post_date.desc()).filter_by(
+            queued=0)
 
 
 class DbEvents(Base):
     """Handle the events data in the database (table: exma_events).
     """
-    props = ColumnCollection(Column('event_id', Integer, ForeignKey("ipb_topics.tid"),primary_key=True),
+    props = ColumnCollection(Column('event_id', Integer, ForeignKey("ipb_topics.tid"), primary_key=True),
                              Column('location_id', Integer, ForeignKey("exma_locations.lid")))
     __table__ = Table('exma_events', meta, *props, autoload=True)
 
@@ -170,7 +172,7 @@ class DbPixComments(Base):
 
 
 class DbPixPeople(Base):
-    props = ColumnCollection(Column('user', Integer,ForeignKey('ipb_members.id') , primary_key=True),
+    props = ColumnCollection(Column('user', Integer, ForeignKey('ipb_members.id'), primary_key=True),
                              Column('picture_id', Integer, ForeignKey("pixma_pics.pid"), primary_key=True),
                              Column('album_id', Integer, ForeignKey('pixma_album.a_id')))
     __table__ = Table('pixma_people', meta, *props, autoload=True)

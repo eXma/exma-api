@@ -49,18 +49,17 @@ class Logout(restful.Resource):
         return {"message": u"Successfull logged out"}
 
 
-
 def require_login(func):
     @wraps(func)
     def nufun(*args, **kwargs):
         if not (debug or current_user.authenticated()):
             abort(401, message="authentication required")
         return func(*args, **kwargs)
+
     return nufun
 
 
 def setup_auth(app, api):
-
     @app.before_request
     def load_user():
         ctx = _request_ctx_stack.top
