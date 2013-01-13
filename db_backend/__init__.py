@@ -146,24 +146,42 @@ class DbLocations(Base):
 
 
 class DbPixAlbums(Base):
-    props = ColumnCollection(Column('a_id', Integer, primary_key=True))
+    props = ColumnCollection(Column('a_id', Integer, primary_key=True),
+                             Column('l_id', Integer, ForeignKey("exma_locations.lid")),
+                             Column('thumb_id', Integer, ForeignKey('pixma_pics.pid')))
     __table__ = Table('pixma_album', meta, *props, autoload=True)
+
+    location = relationship("DbLocations", uselist=False)
+    thumbnail_pic = relationship("DbPixPics", uselist=False, foreign_keys=["DbPixAlbums.thumb_id"])
 
 
 class DbPixComments(Base):
-    props = ColumnCollection(Column('msg_id', Integer, primary_key=True))
+    props = ColumnCollection(Column('msg_id', Integer, primary_key=True),
+                             Column('picture_id', Integer, ForeignKey("pixma_pics.pid")),
+                             Column('user_id', Integer, ForeignKey('ipb_members.id')))
     __table__ = Table('pixma_comments', meta, *props, autoload=True)
+
+    picture = relationship("DbPixPics")
+    member = relationship("DbMembers")
 
 
 class DbPixPeople(Base):
-    props = ColumnCollection(Column('user', Integer, primary_key=True),
-                             Column('picture_id', Integer, primary_key=True),)
+    props = ColumnCollection(Column('user', Integer,ForeignKey('ipb_members.id') , primary_key=True),
+                             Column('picture_id', Integer, ForeignKey("pixma_pics.pid"), primary_key=True),
+                             Column('album_id', Integer, ForeignKey('pixma_album.a_id')))
     __table__ = Table('pixma_people', meta, *props, autoload=True)
+
+    member = relationship("DbMembers")
+    picture = relationship("DbPixPics")
+    album = relationship("DbPixAlbums")
 
 
 class DbPixPics(Base):
-    props = ColumnCollection(Column('pid', Integer, primary_key=True))
+    props = ColumnCollection(Column('pid', Integer, primary_key=True),
+                             Column('aid', Integer, ForeignKey('pixma_album.a_id')))
     __table__ = Table('pixma_pics', meta, *props, autoload=True)
+
+    album = relationship("DbPixAlbums", backref=backref("pictures"), foreign_keys=["DbPixPics.aid"])
 
 
 class DbMembers(Base, user.ApiUser):
