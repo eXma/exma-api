@@ -140,11 +140,16 @@ album_fields = {
 class AlbumList(restful.Resource):
     @marshal_with(album_fields)
     def get(self):
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('limit', type=int)
+        parser.add_argument('offset', type=int)
+        args = parser.parse_args()
+
         albums_qry = db_backend.session.query(db_backend.DbPixAlbums).order_by(db_backend.DbPixAlbums.time.desc())
-        all = albums_qry.all()
+        albums_qry = limit_query(albums_qry, args)
 
-
-        return all
+        return albums_qry.all()
 
 
 
