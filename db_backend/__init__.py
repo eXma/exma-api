@@ -152,7 +152,7 @@ class DbPixAlbums(Base):
     __table__ = Table('pixma_album', meta, *props, autoload=True)
 
     location = relationship("DbLocations", uselist=False)
-    thumbnail_pic = relationship("DbPixPics", uselist=False, foreign_keys=["DbPixAlbums.thumb_id"])
+    thumbnail = relationship("DbPixPics", uselist=False, foreign_keys="DbPixAlbums.thumb_id", lazy="joined")
 
 
 class DbPixComments(Base):
@@ -180,8 +180,21 @@ class DbPixPics(Base):
     props = ColumnCollection(Column('pid', Integer, primary_key=True),
                              Column('aid', Integer, ForeignKey('pixma_album.a_id')))
     __table__ = Table('pixma_pics', meta, *props, autoload=True)
+    picture_url_base = "http://www.exmatrikulationsamt.de/piXma_"
 
-    album = relationship("DbPixAlbums", backref=backref("pictures"), foreign_keys=["DbPixPics.aid"])
+    album = relationship("DbPixAlbums", backref=backref("pictures"), foreign_keys="DbPixPics.aid")
+
+    @property
+    def url(self):
+        return "%s%s.jpg" % (self.picture_url_base, self.pid)
+
+    @property
+    def thumb_small_url(self):
+        return "%s%s_st.jpg" % (self.picture_url_base, self.pid)
+
+    @property
+    def thumb_url(self):
+        return "%s%s_bt.jpg" % (self.picture_url_base, self.pid)
 
 
 class DbMembers(Base, user.ApiUser):

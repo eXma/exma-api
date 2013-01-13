@@ -120,11 +120,41 @@ class Topic(restful.Resource):
         return topic
 
 
+picture_fileds = {
+    "id": fields.Integer(attribute="pid"),
+    "album_id": fields.Integer,
+    "hits": fields.Integer,
+    "url": fields.String,
+    "thumb_small_url": fields.String,
+    "thumb_url": fields.String
+}
+
+album_fields = {
+    'id': fields.Integer(attribute="a_id"),
+    'title': fields.String,
+    'thumbnail': fields.Nested(picture_fileds),
+    'post_date': fields.String,
+    }
+
+
+class AlbumList(restful.Resource):
+    @marshal_with(album_fields)
+    def get(self):
+        albums_qry = db_backend.session.query(db_backend.DbPixAlbums).order_by(db_backend.DbPixAlbums.time.desc())
+        all = albums_qry.all()
+
+
+        return all
+
 
 
 api.add_resource(TopicList, "/topics")
 api.add_resource(Topic, "/topics/<int:topic_id>")
 api.add_resource(PostList, "/topics/<int:topic_id>/posts")
+
+
+api.add_resource(AlbumList, "/albums")
+
 
 if __name__ == '__main__':
     app.debug = True
