@@ -1,5 +1,5 @@
 from json import dumps
-from flask import Flask, make_response, g, session, send_from_directory
+from flask import Flask, make_response, g, session, send_from_directory, request, url_for, send_file
 from collections import OrderedDict
 from flask.ext.restful import fields, marshal_with, abort, reqparse
 from flask.ext import restful
@@ -9,6 +9,7 @@ import os
 
 import db_backend
 import user_ressources
+import thumbnailer
 
 def charset_fix_decorator(response_func):
     """Fix the output mime-type by adding the charset information.
@@ -24,7 +25,7 @@ def charset_fix_decorator(response_func):
     return wrapper
 
 app = Flask(__name__)
-Flask.secret_key = r"af4thei1VaongahB7eiloo]Push@ieZohz{ohjo?w&ahxaegh2zood0rie3i"
+Flask.secret_key = r"af4thei1VaongahB7eiloo]Push@ieZohz{o2hjo?w&ahxaegh2zood0rie3i"
 
 api = restful.Api(app, decorators=[charset_fix_decorator])
 
@@ -33,6 +34,17 @@ def shutdown_session(exception=None):
     """Cleanup the database session after a request.
     """
     db_backend.session.remove()
+
+
+@app.after_request
+def add_cors_header(resp):
+    #resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Origin"] = request.headers.get("Origin") or "*"
+    resp.headers["Access-Control-Allow-Credentials"] = "true"
+    resp.headers['Access-Control-Allow-Headers'] = "Origin, X-Requested-With, Content-Type, Accept"
+    del resp.headers['WWW-Authenticate'] # = 'Basic realm="flask-restful'
+    return resp
+
 
 user_ressources.setup_auth(app, api)
 
@@ -47,7 +59,6 @@ def unicode_json_representation(data, code, headers=None):
     """
     resp = make_response(dumps(data, ensure_ascii=False), code)
     resp.headers.extend(headers or {})
-    resp.headers["Access-Control-Allow-Origin"] = "*"
     return resp
 
 
@@ -66,9 +77,12 @@ def send_picture(pic_id, type_string):
 
     filename = "%d.jpg" % pic_id
     if type_string is not None:
-        if type_string not in ("st", "bt"):
+        if type_string not in ("st", "bt", "sq"):
             abort(404)
-        filename = "%d_%s.jpg" % (pic_id, type_string)
+        if type_string == "sq":
+            filename = "%d_bt.jpg" % (pic_id,)
+        else:
+            filename = "%d_%s.jpg" % (pic_id, type_string)
     else:
         pic.hits += 1
         db_backend.session.commit()
@@ -76,6 +90,10 @@ def send_picture(pic_id, type_string):
     filepath = os.path.join("/mnt/tmp", filename)
     if not os.path.isfile(filepath):
         abort(404)
+
+    if (type_string == "sq"):
+        handle = thumbnailer.load_resized(filepath)
+        return send_file(handle, mimetype="image/jpeg")
 
     return send_from_directory("/mnt/tmp", filename)
 
@@ -145,13 +163,31 @@ class Topic(restful.Resource):
         return topic
 
 
+class PixmaUrl(fields.Raw):
+    thumb = "bt"
+    thumb_small = "st"
+    thumb_square = "sq"
+
+    def __init__(self, format_type=None, attribute="pid"):
+        super(PixmaUrl, self).__init__(attribute=attribute)
+        self.format_type = format_type
+
+    def format(self, value):
+        if self.format_type is None:
+            path = url_for("send_picture", pic_id=value).lstrip("/")
+        else:
+            path = url_for("send_picture", pic_id=value, type_string=self.format_type).lstrip("/")
+        return "/".join((request.url_root.rstrip("/"), path))
+
+
 picture_fileds = {
     "id": fields.Integer(attribute="pid"),
     "album_id": fields.Integer,
     "hits": fields.Integer,
-    "url": fields.String,
-    "thumb_small_url": fields.String,
-    "thumb_url": fields.String
+    "url": PixmaUrl(),
+    "thumb_small_url": PixmaUrl(format_type=PixmaUrl.thumb_small),
+    "thumb_square_url": PixmaUrl(format_type=PixmaUrl.thumb_square),
+    "thumb_url": PixmaUrl(format_type=PixmaUrl.thumb)
 }
 
 album_fields = {
@@ -159,6 +195,8 @@ album_fields = {
     'title': fields.String,
     'thumbnail': fields.Nested(picture_fileds),
     'date': fields.String(attribute="a_date"),
+    'location_name': fields.String(attribute='a_location'),
+    'description': fields.String(attribute='a_desc')
 }
 
 
@@ -206,7 +244,8 @@ api.add_resource(AlbumList, "/albums")
 api.add_resource(Album, "/albums/<int:album_id>")
 api.add_resource(PictureList, "/albums/<int:album_id>/pictures")
 
+
 if __name__ == '__main__':
     #user_ressources.debug = True
-    #app.debug = True
+    app.debug = True
     app.run("0.0.0.0")

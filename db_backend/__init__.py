@@ -190,18 +190,6 @@ class DbPixPics(Base):
 
     album = relationship("DbPixAlbums", backref=backref("pictures"), foreign_keys="DbPixPics.aid")
 
-    @property
-    def url(self):
-        return "%s%s.jpg" % (self.picture_url_base, self.pid)
-
-    @property
-    def thumb_small_url(self):
-        return "%s%s_st.jpg" % (self.picture_url_base, self.pid)
-
-    @property
-    def thumb_url(self):
-        return "%s%s_bt.jpg" % (self.picture_url_base, self.pid)
-
     @staticmethod
     def by_id(pic_id):
         return session.query(DbPixPics).filter_by(pid=pic_id).first()

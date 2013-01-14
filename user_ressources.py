@@ -15,6 +15,8 @@ current_user = LocalProxy(lambda: _request_ctx_stack.top.user)
 
 class Login(restful.Resource):
     def get(self):
+        if current_user.authenticated():
+            return {"login": current_user.name}
         abort(400, message=u"Provide some data as post request!")
 
     def post(self):
