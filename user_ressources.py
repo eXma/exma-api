@@ -1,11 +1,12 @@
 from functools import wraps
-from flask import Flask, make_response, g, session, _request_ctx_stack
+from flask import Flask, make_response, g, session, _request_ctx_stack, request
 from flask.ext.restful import fields, marshal_with, abort, reqparse
 from flask.ext import restful
 from werkzeug.local import LocalProxy
 
 import db_backend
 from db_backend.user import ApiUser
+import ipb_mess
 
 
 debug = False
@@ -21,15 +22,15 @@ class Login(restful.Resource):
             abort(400, message=u"Already logged in")
 
         parser = reqparse.RequestParser()
-        parser.add_argument('login', type=unicode, required=True, help=u"Need a Login!")
-        parser.add_argument('password', type=unicode, required=True, help=u"Need a password!")
+        parser.add_argument('login', type=unicode, required=True, help=u"Need a Login!", location="form")
+        parser.add_argument('password', type=unicode, required=True, help=u"Need a password!", location="form")
         args = parser.parse_args()
 
-        user = db_backend.DbMembers.by_name(args["login"])
+        user = db_backend.DbMembers.by_name(ipb_mess.ipb_clean_value(args["login"]))
         if user is None:
             abort(403, message=u"User not found!")
 
-        if not user.password_valid(args["password"]):
+        if not user.password_valid(ipb_mess.ipb_clean_value(args["password"])):
             abort(403, message=u"Wrong password")
 
         if user.is_banned():
