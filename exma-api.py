@@ -11,6 +11,7 @@ import db_backend
 import user_ressources
 import thumbnailer
 
+
 def charset_fix_decorator(response_func):
     """Fix the output mime-type by adding the charset information.
     """
@@ -24,10 +25,12 @@ def charset_fix_decorator(response_func):
 
     return wrapper
 
+
 app = Flask(__name__)
 Flask.secret_key = r"af4thei1VaongahB7eiloo]Push@ieZohz{o2hjo?w&ahxaegh2zood0rie3i"
 
 api = restful.Api(app, decorators=[charset_fix_decorator])
+
 
 @app.teardown_request
 def shutdown_session(exception=None):
@@ -47,6 +50,7 @@ def add_cors_header(resp):
 
 
 user_ressources.setup_auth(app, api)
+
 
 @api.representation('application/json')
 def unicode_json_representation(data, code, headers=None):
@@ -98,7 +102,20 @@ def send_picture(pic_id, type_string):
     return send_from_directory("/mnt/tmp", filename)
 
 
-def limit_query(query, req_args):
+def limit_query(query):
+    """Apply the limit/offset querystring args.
+
+    :param query: The query to limit.
+    :type query: sqlalchemy.orm.query.Query
+    :return: The limited query.
+    :rtype : sqlalchemy.orm.query.Query
+    """
+
+    parser = reqparse.RequestParser()
+    parser.add_argument('limit', type=int)
+    parser.add_argument('offset', type=int)
+    req_args = parser.parse_args()
+
     limit = req_args.get("limit")
     offset = req_args.get("offset")
     if limit is not None and limit > 0:
@@ -106,6 +123,7 @@ def limit_query(query, req_args):
     if offset is not None and offset > 0:
         query = query.offset(offset)
     return query
+
 
 topic_fields = {
     'tid': fields.Integer,
@@ -119,22 +137,18 @@ topic_fields = {
 class TopicList(restful.Resource):
     @marshal_with(topic_fields)
     def get(self, forum_id=None):
-        parser = reqparse.RequestParser()
-        parser.add_argument('limit', type=int)
-        parser.add_argument('offset', type=int)
-        args = parser.parse_args()
-
         guest_forums = db_backend.DbForums.guest_readable()
         guest_forum_ids = [f.id for f in guest_forums]
 
         topic_qry = db_backend.session.query(db_backend.DbTopics).filter(
             db_backend.DbTopics.forum_id.in_(guest_forum_ids)).filter_by(approved=1).order_by(
             db_backend.DbTopics.last_post.desc()).limit(100)
-        topic_qry = limit_query(topic_qry, args)
+        topic_qry = limit_query(topic_qry)
 
         topics = topic_qry.all()
 
         return topics
+
 
 post_fields = {
     'pid': fields.Integer,
@@ -142,6 +156,7 @@ post_fields = {
     'author_name': fields.String,
     'post_date': fields.String,
 }
+
 
 class PostList(restful.Resource):
     @marshal_with(post_fields)
@@ -204,13 +219,8 @@ class AlbumList(restful.Resource):
     @user_ressources.require_login
     @marshal_with(album_fields)
     def get(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('limit', type=int)
-        parser.add_argument('offset', type=int)
-        args = parser.parse_args()
-
         albums_qry = db_backend.session.query(db_backend.DbPixAlbums).order_by(db_backend.DbPixAlbums.time.desc())
-        albums_qry = limit_query(albums_qry, args)
+        albums_qry = limit_query(albums_qry)
 
         return albums_qry.all()
 
@@ -243,7 +253,6 @@ api.add_resource(PostList, "/topics/<int:topic_id>/posts")
 api.add_resource(AlbumList, "/albums")
 api.add_resource(Album, "/albums/<int:album_id>")
 api.add_resource(PictureList, "/albums/<int:album_id>/pictures")
-
 
 if __name__ == '__main__':
     #user_ressources.debug = True
