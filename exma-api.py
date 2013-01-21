@@ -75,6 +75,11 @@ def start():
 @app.route("/piXma/<int:pic_id>_<string:type_string>.jpg")
 @user_ressources.require_login
 def send_picture(pic_id, type_string):
+    """Sends an image to the client if authorized.
+
+    :type pic_id: int
+    :type type_string: str or None
+    """
     pic = db_backend.DbPixPics.by_id(pic_id)
     if pic is None:
         abort(404)
@@ -96,7 +101,7 @@ def send_picture(pic_id, type_string):
         abort(404)
 
     if (type_string == "sq"):
-        handle = thumbnailer.load_resized(filepath)
+        handle = thumbnailer.load_square_resized(filepath)
         return send_file(handle, mimetype="image/jpeg")
 
     return send_from_directory("/mnt/tmp", filename)
@@ -179,15 +184,29 @@ class Topic(restful.Resource):
 
 
 class PixmaUrl(fields.Raw):
+    """This is a output marshal field to encode image urls in different formats.
+    """
     thumb = "bt"
     thumb_small = "st"
     thumb_square = "sq"
 
     def __init__(self, format_type=None, attribute="pid"):
+        """
+        :param format_type: The format of the image. Should be one of ("st", "bt", "sq")
+        :type format_type: str
+        :param attribute: The attribute to look for the id-part of the image url.
+        :type attribute: str
+        """
         super(PixmaUrl, self).__init__(attribute=attribute)
         self.format_type = format_type
 
     def format(self, value):
+        """Formats the input to a url.
+
+        :type value: long
+        :return: The absolute url for the image.
+        :rtype: str
+        """
         if self.format_type is None:
             path = url_for("send_picture", pic_id=value).lstrip("/")
         else:

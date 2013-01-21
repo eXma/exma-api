@@ -13,7 +13,11 @@ debug = False
 
 current_user = LocalProxy(lambda: _request_ctx_stack.top.user)
 
+
 class Login(restful.Resource):
+    """A resource to handle logins.
+    """
+
     def get(self):
         if current_user.authenticated():
             return {"login": current_user.name}
@@ -44,6 +48,9 @@ class Login(restful.Resource):
 
 
 class Logout(restful.Resource):
+    """A resource to handle logouts.
+    """
+
     def get(self):
         if not current_user.authenticated():
             abort(400, message=u"Not logged in!")
@@ -53,6 +60,14 @@ class Logout(restful.Resource):
 
 
 def require_login(func):
+    """A decorator to ensure that the decorated endpoint is only called from a valid user.
+
+    For debugging the authentication requirement can be turned off using the debug flag
+    of this module.
+
+    :param func The endpoint to decorate.
+    """
+
     @wraps(func)
     def nufun(*args, **kwargs):
         if not (debug or current_user.authenticated()):
@@ -63,6 +78,13 @@ def require_login(func):
 
 
 def setup_auth(app, api):
+    """Set up the authenticaton module for this app.
+
+    :param app: The Flask app
+    :param api: The Flask RESTful API
+    """
+    #ToDo: This has to be made more general to use it with other "modules" of the api.
+
     @app.before_request
     def load_user():
         ctx = _request_ctx_stack.top

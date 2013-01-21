@@ -5,10 +5,12 @@ import sys
 
 GUEST_MASK = [2]
 
+
 class ForumPermissions(object):
     """This class handles the forum permissions.
 
     """
+
     def __init__(self, permission_array):
         """Initialize the permission object by parsing a permission string.
 
@@ -69,7 +71,7 @@ def exma_passhash(password, salt):
 
     The passwords from the ipb are salted and triple md5'ed (because doing
     rot13 twice is more secure!). It can be seen as:
-    >>> md5( md5(salt) + md5(password) )
+    >> md5( md5(salt) + md5(password) )
     For md5() functions that kake a str or unicode and get the result in
     hex representation back.
 
@@ -140,6 +142,7 @@ class UserBan(object):
 class ApiUser(object):
     """A dummy mixin to implement anonymous users.
     """
+
     def authenticated(self):
         """tells if the user is authentiated.
 
@@ -149,4 +152,9 @@ class ApiUser(object):
 
     @property
     def perm_masks(self):
+        """Get the permission masks the user have.
+
+        :rtype: list
+        :return: A List of the masks.
+        """
         return GUEST_MASK

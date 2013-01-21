@@ -23,6 +23,7 @@ def get_passwd(filename):
         pass
     return pw
 
+
 pw_file = os.path.join(os.path.dirname(__file__), "..", "exma_pw")
 
 Base = declarative_base()
@@ -44,6 +45,15 @@ class DbTopics(Base):
 
     @staticmethod
     def by_id(topic_id, user_mask_tuple):
+        """Get a topic by its topic id.
+
+        :type topic_id: int
+        :param topic_id: The id to query for.
+        :type user_mask_tuple: list or tuple
+        :param user_mask_tuple: A set of user masks that are checked for read-access of the forum containing the topic..
+        :rtype: DbTopics or None
+        :return: The DbTopics instance or None if none exists or read is not granted for the given mask.
+        """
         topic = session.query(DbTopics).filter_by(tid=topic_id).filter_by(approved=1).first()
         if topic is not None:
             if topic.forum.can_read(user_mask_tuple):
@@ -103,6 +113,13 @@ class DbPosts(Base):
 
     @staticmethod
     def by_topic_query(topic_id):
+        """Fetches a queryset with all posts for the given topic id.
+
+        :param topic_id: The topic id to query posts for.
+        :type topic_id: int
+        :return: A DbPosts queryset for this topic id or None if not existent.
+        :rtype: sqlalchemy.orm.query.Query
+        """
         return session.query(DbPosts).filter_by(topic_id=topic_id).order_by(DbPosts.post_date.desc()).filter_by(
             queued=0)
 
