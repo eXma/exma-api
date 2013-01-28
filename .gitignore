@@ -3,3 +3,7 @@ exma_pw
 *.pyo
 .idea/workspace.xml
 .idea/tasks.xml
+.idea/dataSources.*
+mysql-connector-*
+schema.png
+schema.svg
