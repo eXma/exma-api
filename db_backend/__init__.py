@@ -203,13 +203,52 @@ class DbPixPics(Base):
     props = ColumnCollection(Column('pid', Integer, primary_key=True),
                              Column('aid', Integer, ForeignKey('pixma_album.a_id')))
     __table__ = Table('pixma_pics', meta, *props, autoload=True)
-    picture_url_base = "/piXma/"
 
     album = relationship("DbPixAlbums", backref=backref("pictures"), foreign_keys="DbPixPics.aid")
 
     @staticmethod
     def by_id(pic_id):
         return session.query(DbPixPics).filter_by(pid=pic_id).first()
+
+
+class DbMessageTopics(Base):
+    """This is a message topic from the ipb database. The table is ipb_message_topics.
+
+    Messages within the ipb are a strange thing. The message-body itself exists only
+    once within the database. If the message is send teh body is created and two of
+    this topics referencing the body. One topic is "owned" by the autor and placed in
+    its "Sent" mailbox, The other is "owned" by the recipient and placed in its "Inbox".
+
+    If you want to get all messages a user can see then ignore the message bodies and
+    fetch all topics that are "owned" by the user. These are the ones that should be
+    visible to the user.The from/to/author does not matter for this. For example a user
+    can delete a message from its "Send" folder, This means only its topic will be
+    deleted. The body and the title for the recipient stay alive and can be found.
+    """
+    props = ColumnCollection(Column('mt_id', Integer, primary_key=True),
+                             Column('mt_from_id', Integer, ForeignKey('ipb_members.id')),
+                             Column('mt_to_id', Integer, ForeignKey('ipb_members.id')),
+                             Column('mt_owner_id', Integer, ForeignKey('ipb_members.id')),
+                             Column('mt_msg_id', Integer, ForeignKey('ipb_message_text.msg_id')))
+    __table__ = Table('ipb_message_topics', meta, *props, autoload=True)
+
+    body = relationship("DbMessageText", backref=backref("headers"))
+
+    owner = relationship("DbMembers", backref=backref("owned_messages"), foreign_keys="DbMessageTopics.mt_owner_id")
+    from_user = relationship("DbMembers", foreign_keys="DbMessageTopics.mt_from_id")
+    to_user = relationship("DbMembers", foreign_keys="DbMessageTopics.mt_to_id")
+
+
+class DbMessageText(Base):
+    """Hold the real message bodies of the users messages. Table is ipb_message_text.
+
+    See DbMessageTopics for more information on the text/topic relationship.
+    """
+    props = ColumnCollection(Column('msg_id', Integer, primary_key=True),
+                             Column('msg_author_id', Integer, ForeignKey('ipb_members.id')))
+    __table__ = Table('ipb_message_text', meta, *props, autoload=True)
+
+    author = relationship("DbMembers")
 
 
 class DbMembers(Base, user.ApiUser):
