@@ -1,9 +1,11 @@
 from json import dumps
 from flask import Flask, make_response, g, session, send_from_directory, request, url_for, send_file
 from collections import OrderedDict
-from flask.ext.restful import fields, marshal_with, abort, reqparse
+from flask.ext.restful import fields, marshal_with, abort, reqparse, marshal
 from flask.ext import restful
 from functools import wraps
+from flask.ext.restful.fields import to_marshallable_type
+from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 import os
 
@@ -274,13 +276,29 @@ class UsernameField(fields.Raw):
         return value.name
 
 
+class LazyNestedField(fields.Nested):
+    def output(self, key, obj):
+        data = to_marshallable_type(obj)
+        if self.attribute is not None:
+            key = self.attribute
+        if key not in data:
+            return None
+        return marshal(data[key], self.nested)
+
+
+body_fields = {
+    'id': fields.Integer(attribute="msg_id"),
+    'text': fields.String(attribute="msg_post")
+}
+
 message_fields = {
     'id': fields.Integer(attribute="mt_id"),
     'title': fields.String(attribute='mt_title'),
     'date': fields.Integer(attribute="mt_date"),
     'from': UsernameField(attribute="from_user"),
     'to': UsernameField(attribute="to_user"),
-    'folder': fields.String(attribute="mt_vid_folder")
+    'folder': fields.String(attribute="mt_vid_folder"),
+    'body': LazyNestedField(body_fields)
 }
 
 class MessageList(restful.Resource):
@@ -291,9 +309,13 @@ class MessageList(restful.Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('since', type=int)
         parser.add_argument('before', type=int)
+        parser.add_argument('bodies', type=bool)
         req_args = parser.parse_args()
 
         message_qry = db_backend.DbMessageTopics.for_user(user_ressources.current_user).order_by(db_backend.DbMessageTopics.mt_date.desc())
+
+        if req_args.get("bodies") is not None:
+            message_qry = message_qry.options(joinedload('body'))
 
         if req_args.get("since") is not None:
             message_qry = message_qry.filter(db_backend.DbMessageTopics.mt_id > req_args["since"])
