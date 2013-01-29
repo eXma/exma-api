@@ -277,6 +277,10 @@ class UsernameField(fields.Raw):
 
 
 class LazyNestedField(fields.Nested):
+    """This os a nested field that returns None if the key does not exist.
+
+    The original raises an error in this case.
+    """
     def output(self, key, obj):
         data = to_marshallable_type(obj)
         if self.attribute is not None:
