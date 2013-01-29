@@ -265,6 +265,50 @@ class PictureList(restful.Resource):
         return album.pictures
 
 
+class UsernameField(fields.Raw):
+    """Filter out the username from a members object
+    """
+    def format(self, value):
+        if not isinstance(value, db_backend.DbMembers):
+            return None
+        return value.name
+
+
+message_fields = {
+    'id': fields.Integer(attribute="mt_id"),
+    'title': fields.String(attribute='mt_title'),
+    'date': fields.Integer(attribute="mt_date"),
+    'from': UsernameField(attribute="from_user"),
+    'to': UsernameField(attribute="to_user"),
+    'folder': fields.String(attribute="mt_vid_folder")
+}
+
+class MessageList(restful.Resource):
+    @user_ressources.require_login
+    @marshal_with(message_fields)
+    def get(self, folder_id=None):
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('since', type=int)
+        parser.add_argument('before', type=int)
+        req_args = parser.parse_args()
+
+        message_qry = db_backend.DbMessageTopics.for_user(user_ressources.current_user).order_by(db_backend.DbMessageTopics.mt_date.desc())
+
+        if req_args.get("since") is not None:
+            message_qry = message_qry.filter(db_backend.DbMessageTopics.mt_id > req_args["since"])
+        if req_args.get("before") is not None:
+            message_qry = message_qry.filter(db_backend.DbMessageTopics.mt_id > req_args["before"])
+
+        if folder_id is not None:
+            message_qry = message_qry.filter_by(mt_vid_folder=folder_id)
+        message_qry = limit_query(message_qry)
+
+        return message_qry.all()
+
+
+
+
 api.add_resource(TopicList, "/topics")
 api.add_resource(Topic, "/topics/<int:topic_id>")
 api.add_resource(PostList, "/topics/<int:topic_id>/posts")
@@ -272,6 +316,9 @@ api.add_resource(PostList, "/topics/<int:topic_id>/posts")
 api.add_resource(AlbumList, "/albums")
 api.add_resource(Album, "/albums/<int:album_id>")
 api.add_resource(PictureList, "/albums/<int:album_id>/pictures")
+
+api.add_resource(MessageList, "/messages")
+api.add_resource(MessageList, "/messages/folder/<folder_id>")
 
 if __name__ == '__main__':
     #user_ressources.debug = True
