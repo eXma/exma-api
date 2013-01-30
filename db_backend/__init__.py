@@ -1,9 +1,12 @@
+import os
+
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, ForeignKey
+
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship, backref
 from sqlalchemy.sql import ColumnCollection
-import os
 
+from db_backend.message import VirtualDir, DirList
 import user
 
 
@@ -234,7 +237,8 @@ class DbMessageTopics(Base):
 
     body = relationship("DbMessageText", backref=backref("headers"))
 
-    owner = relationship("DbMembers", backref=backref("owned_messages"), foreign_keys="DbMessageTopics.mt_owner_id", lazy="joined")
+    owner = relationship("DbMembers", backref=backref("owned_messages"), foreign_keys="DbMessageTopics.mt_owner_id",
+                         lazy="joined")
     from_user = relationship("DbMembers", foreign_keys="DbMessageTopics.mt_from_id", lazy="joined")
     to_user = relationship("DbMembers", foreign_keys="DbMessageTopics.mt_to_id", lazy="joined")
 
@@ -269,6 +273,7 @@ class DbMembers(Base, user.ApiUser):
     __table__ = Table('ipb_members', meta, *props, autoload=True)
 
     converge = relationship("DbMembersConverge", uselist=False)
+    extra = relationship("DbMembersExtra", uselist=False)
 
     def password_valid(self, password):
         """Check if a given password is the password of the user.
@@ -341,3 +346,18 @@ class DbMembersConverge(Base):
     props = ColumnCollection(Column('converge_id', Integer, ForeignKey("ipb_members.id"), primary_key=True))
     __table__ = Table('ipb_members_converge', meta, *props, autoload=True)
 
+
+class DbMembersExtra(Base):
+    props = ColumnCollection(Column('id', Integer, ForeignKey("ipb_members.id"), primary_key=True))
+    __table__ = Table('ipb_member_extra', meta, *props, autoload=True)
+
+    def virtual_dirs(self):
+        """Get a wrapper for the virtual message dirs of the user
+
+        :rtype: db_backend.message.DirList
+        :return: The Dirlist
+        """
+        if hasattr(self, "_vdirs"):
+            return getattr(self, "_vdirs")
+        self._vdirs = DirList(self)
+        return self._vdirs
