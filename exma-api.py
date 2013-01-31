@@ -333,6 +333,19 @@ class MessageList(restful.Resource):
         return message_qry.all()
 
 
+folder_fields = {
+    "name": fields.String,
+    "id": fields.String(attribute="identifier"),
+    "count": fields.Integer,
+}
+
+class FolderList(restful.Resource):
+    @user_ressources.require_login
+    @marshal_with(folder_fields)
+    def get(self):
+        dir_list = user_ressources.current_user.extra.virtual_dirs()
+        return dir_list.as_list
+
 
 
 api.add_resource(TopicList, "/topics")
@@ -344,6 +357,7 @@ api.add_resource(Album, "/albums/<int:album_id>")
 api.add_resource(PictureList, "/albums/<int:album_id>/pictures")
 
 api.add_resource(MessageList, "/messages")
+api.add_resource(FolderList, "/messages/folder")
 api.add_resource(MessageList, "/messages/folder/<folder_id>")
 
 if __name__ == '__main__':

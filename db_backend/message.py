@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from functools import partial
 
 
@@ -29,7 +30,7 @@ class DirList(object):
 
     def __init__(self, member_extra):
         self._member_extra = member_extra
-        self._vdirs = {}
+        self._vdirs = OrderedDict()
         self._max_custom = 2
 
         if member_extra.vdirs is None or not len(member_extra.vdirs):
@@ -57,6 +58,10 @@ class DirList(object):
 
     def __contains__(self, item):
         return item in self._vdirs
+
+    @property
+    def as_list(self):
+        return list(self._vdirs.values())
 
     def add_dir(self, name):
         self._max_custom += 1
