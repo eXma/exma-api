@@ -336,7 +336,7 @@ class MessageList(restful.Resource):
 folder_fields = {
     "name": fields.String,
     "id": fields.String(attribute="identifier"),
-    "count": fields.Integer,
+    "count": fields.Integer(attribute="message_count"),
 }
 
 class FolderList(restful.Resource):
