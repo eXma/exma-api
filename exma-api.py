@@ -347,6 +347,18 @@ class FolderList(restful.Resource):
         return dir_list.as_list
 
 
+class Message(restful.Resource):
+    @user_ressources.require_login
+    @marshal_with(message_fields)
+    def get(self, message_topic_id):
+        message_qry = db_backend.DbMessageTopics.for_user(user_ressources.current_user, message_topic_id)
+        message_qry = message_qry.options(joinedload('body'))
+        message = message_qry.first()
+        if message is None:
+            abort(404, message="Message not found for user")
+
+        return message
+
 
 api.add_resource(TopicList, "/topics")
 api.add_resource(Topic, "/topics/<int:topic_id>")
@@ -357,6 +369,7 @@ api.add_resource(Album, "/albums/<int:album_id>")
 api.add_resource(PictureList, "/albums/<int:album_id>/pictures")
 
 api.add_resource(MessageList, "/messages")
+api.add_resource(Message, "/messages/single/<message_topic_id>")
 api.add_resource(FolderList, "/messages/folder")
 api.add_resource(MessageList, "/messages/folder/<folder_id>")
 

@@ -243,15 +243,20 @@ class DbMessageTopics(Base):
     to_user = relationship("DbMembers", foreign_keys="DbMessageTopics.mt_to_id", lazy="joined")
 
     @staticmethod
-    def for_user(user):
-        """Return a queryset of all Messages owned by a specific user.
+    def for_user(user, topic_id=None):
+        """Return a queryset of all Messages or a single message owned by a specific user.
 
         :type user: DbMembers
         :param user: Teh user to select the messages for.
+        :type topic_id: int
+        :param topic_id: optional a topic id to get a single message topic.
         :rtype: sqlalchemy.orm.query.Query
         :return: The query.
         """
-        return session.query(DbMessageTopics).filter(DbMessageTopics.owner == user)
+        qry = session.query(DbMessageTopics).filter(DbMessageTopics.owner == user)
+        if topic_id is not None:
+            qry = qry.filter_by(mt_id=topic_id)
+        return qry
 
 
 class DbMessageText(Base):
