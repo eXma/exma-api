@@ -25,8 +25,8 @@ def get_passwd(filename):
     try:
         with open(filename, "r") as f:
             pw = f.read()
-    except Exception as e:
-        pass
+    except OSError as e:
+        print "Got an oserror: %s!" % e
     return pw
 
 
