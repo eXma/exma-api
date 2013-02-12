@@ -9,6 +9,9 @@ from sqlalchemy.sql import ColumnCollection
 from db_backend.message import VirtualDir, DirList
 import user
 
+# ToDo: Refactor this in smaller modules
+# ToDo: Use any sort of DI to give a fake database for unittests
+
 
 def get_passwd(filename):
     """Read the username/passwd from an extra file.
