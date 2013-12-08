@@ -1,5 +1,5 @@
 from io import StringIO
-import Image
+from PIL import Image
 
 THUMB_SIZE = 120, 120
 
