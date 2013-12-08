@@ -7,7 +7,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker, relationship, backref
 from sqlalchemy.sql import ColumnCollection
 
 from db_backend.message import VirtualDir, DirList
-import user
+from . import user
 
 # ToDo: Refactor this in smaller modules
 # ToDo: Use any sort of DI to give a fake database for unittests
@@ -26,7 +26,7 @@ def get_passwd(filename):
         with open(filename, "r") as f:
             pw = f.read()
     except OSError as e:
-        print "Got an oserror: %s!" % e
+        print("Got an oserror: %s!" % e)
     return pw
 
 
@@ -141,14 +141,14 @@ class DbEvents(Base):
     location = relationship("DbLocations", uselist=False)
 
     all_categories = {
-        0: u"Keine",
-        1: u"Party",
-        2: u"Kunst oder Kultur",
-        3: u"Kneipe oder Club",
-        4: u"Freizeit oder Erholung",
-        5: u"Studentenclubs",
-        6: u"Dresdner Studententage",
-        7: u"Forschung und Wissen"
+        0: "Keine",
+        1: "Party",
+        2: "Kunst oder Kultur",
+        3: "Kneipe oder Club",
+        4: "Freizeit oder Erholung",
+        5: "Studentenclubs",
+        6: "Dresdner Studententage",
+        7: "Forschung und Wissen"
     }
 
     @property

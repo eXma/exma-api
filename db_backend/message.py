@@ -11,13 +11,13 @@ class VirtualDir(object):
 
     def _update(self, value, key=None):
         if key not in ("name", "message_count", "identifier"):
-            raise AttributeError, key
+            raise AttributeError(key)
         setattr(self, "_%s" % key, value)
         self._dir_list.update()
 
     def _get(self, key):
         if key not in ("name", "message_count", "identifier"):
-            raise AttributeError, key
+            raise AttributeError(key)
         return getattr(self, "_%s" % key)
 
     name = property(partial(_get, key="name"), partial(_update, key="name"))

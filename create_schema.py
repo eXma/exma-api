@@ -15,7 +15,7 @@ def fetch_mappers():
             if isinstance(ex, sqlalchemy.exc.InvalidRequestError):
                 if ex.message.startswith("One or more mappers failed to initialize"):
                     raise
-            print "ignoring %s" % attr
+            print("ignoring %s" % attr)
     return mappers
 
 

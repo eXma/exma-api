@@ -124,7 +124,7 @@ class UserBan(object):
             if len(ban_parts) == 4:
                 try:
                     start = datetime.datetime.fromtimestamp(int(ban_parts[0]))
-                    if float(ban_parts[1]) < sys.maxint:
+                    if float(ban_parts[1]) < sys.maxsize:
                         end = datetime.datetime.fromtimestamp(int(ban_parts[1]))
                         duration_hours = ban_parts[2]
                         if ban_parts[3] == "d":
