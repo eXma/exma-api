@@ -54,7 +54,10 @@ def parse_permissions(permission_array):
     :return: The parsed dict with the permissions.
     """
     parsed = {}
-    perms = phpserialize.loads(permission_array)
+
+    if isinstance(permission_array, str):
+        permission_array = bytes(permission_array, "utf8")
+    perms = phpserialize.loads(permission_array, decode_strings=True)
     for perm_type in perms:
         parsed[perm_type] = set()
         if perms[perm_type] is not None:
