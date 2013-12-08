@@ -6,7 +6,7 @@ from flask.ext import restful
 from functools import wraps
 from sqlalchemy.orm import joinedload
 import os
-from api.fields import LazyNestedField, UsernameField
+from api.fields import LazyNestedField, UsernameField, PixmaUrl
 
 import db_backend
 import user_ressources
