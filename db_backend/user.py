@@ -48,9 +48,9 @@ def parse_permissions(permission_array):
     This function parses this to a dict with the permission types as keys
     and a list of the mask ids as value.
 
-    :type permission_array: str or unicode
+    :type permission_array: str or bytes
     :param permission_array: The phpserializes crippled arraystring
-    :rtype: dict of list
+    :rtype: dict[str, set[bytes]]
     :return: The parsed dict with the permissions.
     """
     parsed = {}

@@ -316,7 +316,7 @@ api.add_resource(PictureList, "/albums/<int:album_id>/pictures")
 api.add_resource(MessageList, "/messages")
 api.add_resource(Message, "/messages/single/<message_topic_id>")
 api.add_resource(FolderList, "/messages/folder")
-api.add_resource(MessageList, "/messages/folder/<folder_id>")
+#api.add_resource(MessageList, "/messages/folder/<folder_id>")
 
 if __name__ == '__main__':
     #user_ressources.debug = True
