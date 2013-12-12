@@ -7,7 +7,6 @@ from flask.ext.restful import fields, marshal_with, abort
 from flask.ext import restful
 from functools import wraps
 import os
-from api.fields import PixmaUrl
 
 import db_backend
 import thumbnailer
