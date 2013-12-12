@@ -1,5 +1,6 @@
 from json import dumps
-from api import user
+from api import user, messages
+from api.request_helper import limit_query
 from api.user import authorization
 from flask import Flask, make_response, send_from_directory, request, send_file
 from flask.ext.restful import fields, marshal_with, abort, reqparse
@@ -109,27 +110,6 @@ def send_picture(pic_id, type_string):
     return send_from_directory("/mnt/tmp", filename)
 
 
-def limit_query(query):
-    """Apply the limit/offset querystring args.
-
-    :param query: The query to limit.
-    :type query: sqlalchemy.orm.query.Query
-    :return: The limited query.
-    :rtype : sqlalchemy.orm.query.Query
-    """
-
-    parser = reqparse.RequestParser()
-    parser.add_argument('limit', type=int)
-    parser.add_argument('offset', type=int)
-    req_args = parser.parse_args()
-
-    limit = req_args.get("limit")
-    offset = req_args.get("offset")
-    if limit is not None and limit > 0:
-        query = query.limit(limit)
-    if offset is not None and offset > 0:
-        query = query.offset(offset)
-    return query
 
 
 topic_fields = {
@@ -236,76 +216,6 @@ class PictureList(restful.Resource):
         return album.pictures
 
 
-body_fields = {
-    'id': fields.Integer(attribute="msg_id"),
-    'text': fields.String(attribute="msg_post")
-}
-
-message_fields = {
-    'id': fields.Integer(attribute="mt_id"),
-    'title': fields.String(attribute='mt_title'),
-    'date': fields.Integer(attribute="mt_date"),
-    'from': UsernameField(attribute="from_user"),
-    'to': UsernameField(attribute="to_user"),
-    'folder': fields.String(attribute="mt_vid_folder"),
-    'body': LazyNestedField(body_fields)
-}
-
-class MessageList(restful.Resource):
-    @authorization.require_login
-    @marshal_with(message_fields)
-    def get(self, folder_id=None):
-
-        parser = reqparse.RequestParser()
-        parser.add_argument('since', type=int)
-        parser.add_argument('before', type=int)
-        parser.add_argument('bodies', type=bool)
-        req_args = parser.parse_args()
-
-        message_qry = db_backend.DbMessageTopics.for_user(authorization.current_user).order_by(db_backend.DbMessageTopics.mt_date.desc())
-
-        if req_args.get("bodies") is not None:
-            message_qry = message_qry.options(joinedload('body'))
-
-        if req_args.get("since") is not None:
-            message_qry = message_qry.filter(db_backend.DbMessageTopics.mt_id > req_args["since"])
-        if req_args.get("before") is not None:
-            message_qry = message_qry.filter(db_backend.DbMessageTopics.mt_id > req_args["before"])
-
-        if folder_id is not None:
-            message_qry = message_qry.filter_by(mt_vid_folder=folder_id)
-        message_qry = limit_query(message_qry)
-
-        return message_qry.all()
-
-
-folder_fields = {
-    "name": fields.String,
-    "id": fields.String(attribute="identifier"),
-    "count": fields.Integer(attribute="message_count"),
-}
-
-class FolderList(restful.Resource):
-    @authorization.require_login
-    @marshal_with(folder_fields)
-    def get(self):
-        dir_list = authorization.current_user.extra.virtual_dirs()
-        return dir_list.as_list
-
-
-class Message(restful.Resource):
-    @authorization.require_login
-    @marshal_with(message_fields)
-    def get(self, message_topic_id):
-        message_qry = db_backend.DbMessageTopics.for_user(authorization.current_user, message_topic_id)
-        message_qry = message_qry.options(joinedload('body'))
-        message = message_qry.first()
-        if message is None:
-            abort(404, message="Message not found for user")
-
-        return message
-
-
 api.add_resource(TopicList, "/topics")
 api.add_resource(Topic, "/topics/<int:topic_id>")
 api.add_resource(PostList, "/topics/<int:topic_id>/posts")
@@ -314,9 +224,7 @@ api.add_resource(AlbumList, "/albums")
 api.add_resource(Album, "/albums/<int:album_id>")
 api.add_resource(PictureList, "/albums/<int:album_id>/pictures")
 
-api.add_resource(MessageList, "/messages", "/messages/folder/<folder_id>")
-api.add_resource(Message, "/messages/single/<message_topic_id>")
-api.add_resource(FolderList, "/messages/folder")
+app.register_blueprint(messages.message_blueprint(), prefix="/messages")
 
 if __name__ == '__main__':
     #user_ressources.debug = True
