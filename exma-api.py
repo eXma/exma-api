@@ -107,9 +107,9 @@ def send_picture(pic_id, type_string):
     return send_from_directory("/mnt/tmp", filename)
 
 
-app.register_blueprint(topics.topic_blueprint(), prefix="/topics")
-app.register_blueprint(albums.album_blueprint(), prefix="/messages")
-app.register_blueprint(messages.message_blueprint(), prefix="/messages")
+app.register_blueprint(topics.topic_blueprint(), url_prefix="/topics")
+app.register_blueprint(albums.album_blueprint(), url_prefix="/messages")
+app.register_blueprint(messages.message_blueprint(), url_prefix="/messages")
 
 if __name__ == '__main__':
     #user_ressources.debug = True
