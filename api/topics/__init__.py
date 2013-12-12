@@ -4,7 +4,7 @@ import flask_restful
 
 
 def topic_blueprint():
-    topic_bp = Blueprint("messages", __name__)
+    topic_bp = Blueprint("topics", __name__)
 
     topic_api = flask_restful.Api()
     topic_api.init_app(topic_bp)
