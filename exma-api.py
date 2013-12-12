@@ -1,6 +1,7 @@
 from json import dumps
-from flask import Flask, make_response, g, session, send_from_directory, request, url_for, send_file
-from collections import OrderedDict
+from api import user
+from api.user import authorization
+from flask import Flask, make_response, send_from_directory, request, send_file
 from flask.ext.restful import fields, marshal_with, abort, reqparse
 from flask.ext import restful
 from functools import wraps
@@ -9,7 +10,6 @@ import os
 from api.fields import LazyNestedField, UsernameField, PixmaUrl
 
 import db_backend
-import user_ressources
 import thumbnailer
 
 
@@ -50,7 +50,8 @@ def add_cors_header(resp):
     return resp
 
 
-user_ressources.setup_auth(app, api)
+authorization.setup_auth(app)
+app.register_blueprint(user.user_blueprint())
 
 
 @api.representation('application/json')
@@ -74,7 +75,7 @@ def start():
 
 @app.route("/piXma/<int:pic_id>.jpg", defaults={"type_string": None})
 @app.route("/piXma/<int:pic_id>_<string:type_string>.jpg")
-@user_ressources.require_login
+@authorization.require_login
 def send_picture(pic_id, type_string):
     """Sends an image to the client if authorized.
 
@@ -167,7 +168,7 @@ post_fields = {
 class PostList(restful.Resource):
     @marshal_with(post_fields)
     def get(self, topic_id):
-        topic = db_backend.DbTopics.by_id(topic_id, user_ressources.current_user.perm_masks)
+        topic = db_backend.DbTopics.by_id(topic_id, authorization.current_user.perm_masks)
         if topic is None:
             abort(404, message="No topic with this id available")
 
@@ -178,7 +179,7 @@ class PostList(restful.Resource):
 class Topic(restful.Resource):
     @marshal_with(topic_fields)
     def get(self, topic_id):
-        topic = db_backend.DbTopics.by_id(topic_id, user_ressources.current_user.perm_masks)
+        topic = db_backend.DbTopics.by_id(topic_id, authorization.current_user.perm_masks)
         if topic is None:
             abort(404, message="No topic with this id available")
         return topic
@@ -205,7 +206,7 @@ album_fields = {
 
 
 class AlbumList(restful.Resource):
-    @user_ressources.require_login
+    @authorization.require_login
     @marshal_with(album_fields)
     def get(self):
         albums_qry = db_backend.session.query(db_backend.DbPixAlbums).order_by(db_backend.DbPixAlbums.time.desc())
@@ -215,7 +216,7 @@ class AlbumList(restful.Resource):
 
 
 class Album(restful.Resource):
-    @user_ressources.require_login
+    @authorization.require_login
     @marshal_with(album_fields)
     def get(self, album_id):
         album = db_backend.DbPixAlbums.by_id(album_id)
@@ -225,7 +226,7 @@ class Album(restful.Resource):
 
 
 class PictureList(restful.Resource):
-    @user_ressources.require_login
+    @authorization.require_login
     @marshal_with(picture_fileds)
     def get(self, album_id):
         album = db_backend.DbPixAlbums.by_id(album_id)
@@ -251,7 +252,7 @@ message_fields = {
 }
 
 class MessageList(restful.Resource):
-    @user_ressources.require_login
+    @authorization.require_login
     @marshal_with(message_fields)
     def get(self, folder_id=None):
 
@@ -261,7 +262,7 @@ class MessageList(restful.Resource):
         parser.add_argument('bodies', type=bool)
         req_args = parser.parse_args()
 
-        message_qry = db_backend.DbMessageTopics.for_user(user_ressources.current_user).order_by(db_backend.DbMessageTopics.mt_date.desc())
+        message_qry = db_backend.DbMessageTopics.for_user(authorization.current_user).order_by(db_backend.DbMessageTopics.mt_date.desc())
 
         if req_args.get("bodies") is not None:
             message_qry = message_qry.options(joinedload('body'))
@@ -285,18 +286,18 @@ folder_fields = {
 }
 
 class FolderList(restful.Resource):
-    @user_ressources.require_login
+    @authorization.require_login
     @marshal_with(folder_fields)
     def get(self):
-        dir_list = user_ressources.current_user.extra.virtual_dirs()
+        dir_list = authorization.current_user.extra.virtual_dirs()
         return dir_list.as_list
 
 
 class Message(restful.Resource):
-    @user_ressources.require_login
+    @authorization.require_login
     @marshal_with(message_fields)
     def get(self, message_topic_id):
-        message_qry = db_backend.DbMessageTopics.for_user(user_ressources.current_user, message_topic_id)
+        message_qry = db_backend.DbMessageTopics.for_user(authorization.current_user, message_topic_id)
         message_qry = message_qry.options(joinedload('body'))
         message = message_qry.first()
         if message is None:
