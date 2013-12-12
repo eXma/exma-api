@@ -1,14 +1,12 @@
 from json import dumps
 from api import user, messages, albums, topics
 from api.user import authorization
-from flask import Flask, make_response, send_from_directory, request, send_file
-from flask.ext.restful import abort
+from flask import Flask, make_response, request
 from flask.ext import restful
 from functools import wraps
-import os
 
 import db_backend
-import thumbnailer
+import pixma_images
 
 
 def charset_fix_decorator(response_func):
@@ -71,42 +69,9 @@ def start():
     return 'eXma REST API!'
 
 
-@app.route("/piXma/<int:pic_id>.jpg", defaults={"type_string": None})
-@app.route("/piXma/<int:pic_id>_<string:type_string>.jpg")
-@authorization.require_login
-def send_picture(pic_id, type_string):
-    """Sends an image to the client if authorized.
-
-    :type pic_id: int
-    :type type_string: str or None
-    """
-    pic = db_backend.DbPixPics.by_id(pic_id)
-    if pic is None:
-        abort(404)
-
-    filename = "%d.jpg" % pic_id
-    if type_string is not None:
-        if type_string not in ("st", "bt", "sq"):
-            abort(404)
-        if type_string == "sq":
-            filename = "%d_bt.jpg" % (pic_id,)
-        else:
-            filename = "%d_%s.jpg" % (pic_id, type_string)
-    else:
-        pic.hits += 1
-        db_backend.session.commit()
-
-    filepath = os.path.join("/mnt/tmp", filename)
-    if not os.path.isfile(filepath):
-        abort(404)
-
-    if (type_string == "sq"):
-        handle = thumbnailer.load_square_resized(filepath)
-        return send_file(handle, mimetype="image/jpeg")
-
-    return send_from_directory("/mnt/tmp", filename)
 
 
+app.register_blueprint(pixma_images.pixma_blueprint(), url_prefix="/piXma")
 app.register_blueprint(topics.topic_blueprint(), url_prefix="/topics")
 app.register_blueprint(albums.album_blueprint(), url_prefix="/messages")
 app.register_blueprint(messages.message_blueprint(), url_prefix="/messages")
