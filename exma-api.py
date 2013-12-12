@@ -1,5 +1,5 @@
 from json import dumps
-from api import user, messages
+from api import user, messages, albums
 from api.request_helper import limit_query
 from api.user import authorization
 from flask import Flask, make_response, send_from_directory, request, send_file
@@ -164,65 +164,12 @@ class Topic(restful.Resource):
         return topic
 
 
-picture_fileds = {
-    "id": fields.Integer(attribute="pid"),
-    "album_id": fields.Integer,
-    "hits": fields.Integer,
-    "url": PixmaUrl(),
-    "thumb_small_url": PixmaUrl(format_type=PixmaUrl.thumb_small),
-    "thumb_square_url": PixmaUrl(format_type=PixmaUrl.thumb_square),
-    "thumb_url": PixmaUrl(format_type=PixmaUrl.thumb)
-}
-
-album_fields = {
-    'id': fields.Integer(attribute="a_id"),
-    'title': fields.String,
-    'thumbnail': fields.Nested(picture_fileds),
-    'date': fields.String(attribute="a_date"),
-    'location_name': fields.String(attribute='a_location'),
-    'description': fields.String(attribute='a_desc')
-}
-
-
-class AlbumList(restful.Resource):
-    @authorization.require_login
-    @marshal_with(album_fields)
-    def get(self):
-        albums_qry = db_backend.session.query(db_backend.DbPixAlbums).order_by(db_backend.DbPixAlbums.time.desc())
-        albums_qry = limit_query(albums_qry)
-
-        return albums_qry.all()
-
-
-class Album(restful.Resource):
-    @authorization.require_login
-    @marshal_with(album_fields)
-    def get(self, album_id):
-        album = db_backend.DbPixAlbums.by_id(album_id)
-        if album is None:
-            return abort(404, message="Album not found")
-        return album
-
-
-class PictureList(restful.Resource):
-    @authorization.require_login
-    @marshal_with(picture_fileds)
-    def get(self, album_id):
-        album = db_backend.DbPixAlbums.by_id(album_id)
-        if album is None:
-            abort(404, message="album not found")
-
-        return album.pictures
-
-
 api.add_resource(TopicList, "/topics")
 api.add_resource(Topic, "/topics/<int:topic_id>")
 api.add_resource(PostList, "/topics/<int:topic_id>/posts")
 
-api.add_resource(AlbumList, "/albums")
-api.add_resource(Album, "/albums/<int:album_id>")
-api.add_resource(PictureList, "/albums/<int:album_id>/pictures")
 
+app.register_blueprint(albums.album_blueprint(), prefix="/messages")
 app.register_blueprint(messages.message_blueprint(), prefix="/messages")
 
 if __name__ == '__main__':
