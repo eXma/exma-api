@@ -11,3 +11,5 @@ def user_blueprint():
 
     user_api.add_resource(Login, "/login")
     user_api.add_resource(Logout, "/logout")
+
+    return user_bp

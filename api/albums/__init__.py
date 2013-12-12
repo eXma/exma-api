@@ -13,3 +13,5 @@ def album_blueprint():
     album_api.add_resource(AlbumList, "/")
     album_api.add_resource(Album, "/<int:album_id>")
     album_api.add_resource(PictureList, "/<int:album_id>/pictures")
+
+    return album_bp

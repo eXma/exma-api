@@ -12,3 +12,5 @@ def message_blueprint():
     message_api.add_resource(MessageList, "/", "/folder/<folder_id>")
     message_api.add_resource(Message, "/single/<message_topic_id>")
     message_api.add_resource(FolderList, "/folder")
+
+    return message_bp
