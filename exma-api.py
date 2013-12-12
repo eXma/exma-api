@@ -3,12 +3,11 @@ from api import user, messages
 from api.request_helper import limit_query
 from api.user import authorization
 from flask import Flask, make_response, send_from_directory, request, send_file
-from flask.ext.restful import fields, marshal_with, abort, reqparse
+from flask.ext.restful import fields, marshal_with, abort
 from flask.ext import restful
 from functools import wraps
-from sqlalchemy.orm import joinedload
 import os
-from api.fields import LazyNestedField, UsernameField, PixmaUrl
+from api.fields import PixmaUrl
 
 import db_backend
 import thumbnailer
