@@ -15,6 +15,7 @@ from . import user
 
 Base = declarative_base()
 
+
 class DbTopics(Base):
     """This handles the ipb_topics data within the exma ipb database
     """
