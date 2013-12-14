@@ -33,7 +33,7 @@ def get_passwd(filename):
 pw_file = os.path.join(os.path.dirname(__file__), "..", "exma_pw")
 
 Base = declarative_base()
-engine = create_engine('mysql+cymysql://%s@127.0.0.1/exma?charset=utf8' % get_passwd(pw_file))
+engine = create_engine('mysql+cymysql://%s@127.0.0.1/exma?charset=utf8' % get_passwd(pw_file), echo=True)
 meta = MetaData(bind=engine)
 #session = None
 session = scoped_session(sessionmaker(bind=engine))

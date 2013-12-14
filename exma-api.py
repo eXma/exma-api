@@ -1,7 +1,6 @@
-from json import dumps
 from api import user, messages, albums, topics
 from api.user import authorization
-from flask import Flask, make_response, request
+from flask import Flask, request
 from flask.ext import restful
 from functools import wraps
 
@@ -49,19 +48,6 @@ def add_cors_header(resp):
 authorization.setup_auth(app)
 app.register_blueprint(user.user_blueprint())
 
-
-@api.representation('application/json')
-def unicode_json_representation(data, code, headers=None):
-    """This is a "enhanced" json representation handler that leaves unicode unicode.
-
-    :param data: The data to pack in a response
-    :param code: The http status code.
-    :param headers: Optional additional headers
-    :return: A new fresh response.
-    """
-    resp = make_response(dumps(data, ensure_ascii=False), code)
-    resp.headers.extend(headers or {})
-    return resp
 
 
 @app.route('/')
