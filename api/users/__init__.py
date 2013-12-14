@@ -1,6 +1,6 @@
 from api.representation import set_unicode_json_repesentation
 from api.request_helper import charset_fix_decorator
-from api.user.ressources import Login, Logout
+from api.users.ressources import Login, Logout
 from flask import Blueprint
 import flask_restful
 

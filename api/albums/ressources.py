@@ -1,6 +1,6 @@
 from api.albums import fieldsets
 from api.request_helper import limit_query
-from api.user import authorization
+from api.users import authorization
 from flask.ext.restful import marshal_with, abort
 from flask.ext import restful
 
