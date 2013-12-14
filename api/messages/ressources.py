@@ -1,6 +1,6 @@
 from api.messages import fieldsets
 from api.request_helper import limit_query
-from api.user import authorization
+from api.users import authorization
 from flask.ext.restful import marshal_with, abort, reqparse
 from flask.ext import restful
 from sqlalchemy.orm import joinedload

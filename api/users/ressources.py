@@ -1,4 +1,4 @@
-from api.user.authorization import current_user
+from api.users.authorization import current_user
 import db_backend
 from flask import session
 from flask.ext import restful

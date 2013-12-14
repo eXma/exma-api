@@ -1,4 +1,4 @@
-from api.user import authorization
+from api.users import authorization
 import db_backend
 from flask import Blueprint, send_file, send_from_directory
 from flask.ext.restful import abort
