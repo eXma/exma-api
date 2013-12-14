@@ -2,7 +2,7 @@ from api import user, messages, albums, topics
 from api.user import authorization
 from flask import Flask, request
 
-import db_backend
+import db_backend.config
 import pixma_images
 
 
@@ -14,7 +14,7 @@ Flask.secret_key = r"af4thei1VaongahB7eiloo]Push@ieZohz{o2hjo?w&ahxaegh2zood0rie
 def shutdown_session(exception=None):
     """Cleanup the database session after a request.
     """
-    db_backend.session.remove()
+    db_backend.config.connection.session.remove()
 
 
 @app.after_request
@@ -28,7 +28,6 @@ def add_cors_header(resp):
 
 
 authorization.setup_auth(app)
-app.register_blueprint(user.user_blueprint())
 
 
 @app.route('/')
@@ -36,12 +35,12 @@ def start():
     return 'eXma REST API!'
 
 
+app.register_blueprint(user.user_blueprint())
 app.register_blueprint(pixma_images.pixma_blueprint(), url_prefix="/piXma")
 app.register_blueprint(topics.topic_blueprint(), url_prefix="/topics")
 app.register_blueprint(albums.album_blueprint(), url_prefix="/messages")
 app.register_blueprint(messages.message_blueprint(), url_prefix="/messages")
 
 if __name__ == '__main__':
-    #user_ressources.debug = True
     app.debug = True
     app.run("0.0.0.0")

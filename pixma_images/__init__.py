@@ -5,6 +5,7 @@ from flask.ext.restful import abort
 
 import os
 from pixma_images import thumbnailer
+from db_backend.config import connection
 
 _pixma_bp = Blueprint("pixma", __name__)
 
@@ -36,7 +37,7 @@ def send_picture(pic_id, type_string):
             filename = "%d_%s.jpg" % (pic_id, type_string)
     else:
         pic.hits += 1
-        db_backend.session.commit()
+        connection.session.commit()
 
     filepath = os.path.join("/mnt/tmp", filename)
     if not os.path.isfile(filepath):

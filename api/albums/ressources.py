@@ -5,13 +5,14 @@ from flask.ext.restful import marshal_with, abort
 from flask.ext import restful
 
 import db_backend
+from db_backend.config import connection
 
 
 class AlbumList(restful.Resource):
     @authorization.require_login
     @marshal_with(fieldsets.album_fields)
     def get(self):
-        albums_qry = db_backend.session.query(db_backend.DbPixAlbums).order_by(db_backend.DbPixAlbums.time.desc())
+        albums_qry = connection.session.query(db_backend.DbPixAlbums).order_by(db_backend.DbPixAlbums.time.desc())
         albums_qry = limit_query(albums_qry)
 
         return albums_qry.all()

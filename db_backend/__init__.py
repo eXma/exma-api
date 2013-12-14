@@ -1,9 +1,9 @@
-import os
+from db_backend.config import connection
 
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, ForeignKey
+from sqlalchemy import Table, Column, Integer, ForeignKey
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import scoped_session, sessionmaker, relationship, backref
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import ColumnCollection
 
 from db_backend.message import VirtualDir, DirList
@@ -13,38 +13,14 @@ from . import user
 # ToDo: Use any sort of DI to give a fake database for unittests
 
 
-def get_passwd(filename):
-    """Read the username/passwd from an extra file.
-
-    This is to prevent the password from being committed to the VCS.
-
-    :param filename: The name of the file where the pw is stored.
-    :return: The username:password
-    """
-    pw = ""
-    try:
-        with open(filename, "r") as f:
-            pw = f.read()
-    except OSError as e:
-        print("Got an oserror: %s!" % e)
-    return pw
-
-
-pw_file = os.path.join(os.path.dirname(__file__), "..", "exma_pw")
-
 Base = declarative_base()
-engine = create_engine('mysql+cymysql://%s@127.0.0.1/exma?charset=utf8' % get_passwd(pw_file), echo=True)
-meta = MetaData(bind=engine)
-#session = None
-session = scoped_session(sessionmaker(bind=engine))
-
 
 class DbTopics(Base):
     """This handles the ipb_topics data within the exma ipb database
     """
     props = ColumnCollection(Column('tid', Integer, primary_key=True),
                              Column('forum_id', Integer, ForeignKey("ipb_forums.id")))
-    __table__ = Table('ipb_topics', meta, *props, autoload=True)
+    __table__ = Table('ipb_topics', connection.metadata, *props, autoload=True)
 
     forum = relationship("DbForums")
     all_posts = relationship("DbPosts", backref=backref('topic'))
@@ -60,7 +36,7 @@ class DbTopics(Base):
         :rtype: DbTopics or None
         :return: The DbTopics instance or None if none exists or read is not granted for the given mask.
         """
-        topic = session.query(DbTopics).filter_by(tid=topic_id).filter_by(approved=1).first()
+        topic = connection.session.query(DbTopics).filter_by(tid=topic_id).filter_by(approved=1).first()
         if topic is not None:
             if topic.forum.can_read(user_mask_tuple):
                 return topic
@@ -72,7 +48,7 @@ class DbForums(Base):
     """
 
     props = ColumnCollection(Column('id', Integer, primary_key=True))
-    __table__ = Table('ipb_forums', meta, *props, autoload=True)
+    __table__ = Table('ipb_forums', connection.metadata, *props, autoload=True)
 
     @property
     def perms(self):
@@ -103,7 +79,7 @@ class DbForums(Base):
         :return: The list of fetched forum objects.
         """
         forums = []
-        for forum in session.query(DbForums):
+        for forum in connection.session.query(DbForums):
             if forum.can_read(user.GUEST_MASK):
                 forums.append(forum)
 
@@ -115,7 +91,7 @@ class DbPosts(Base):
     """
     props = ColumnCollection(Column('pid', Integer, primary_key=True),
                              Column('topic_id', Integer, ForeignKey("ipb_topics.tid")))
-    __table__ = Table('ipb_posts', meta, *props, autoload=True)
+    __table__ = Table('ipb_posts', connection.metadata, *props, autoload=True)
 
     @staticmethod
     def by_topic_query(topic_id):
@@ -126,8 +102,8 @@ class DbPosts(Base):
         :return: A DbPosts queryset for this topic id or None if not existent.
         :rtype: sqlalchemy.orm.query.Query
         """
-        return session.query(DbPosts).filter_by(topic_id=topic_id).order_by(DbPosts.post_date.desc()).filter_by(
-            queued=0)
+        return connection.session.query(DbPosts).filter_by(topic_id=topic_id).order_by(
+            DbPosts.post_date.desc()).filter_by(queued=0)
 
 
 class DbEvents(Base):
@@ -135,7 +111,7 @@ class DbEvents(Base):
     """
     props = ColumnCollection(Column('event_id', Integer, ForeignKey("ipb_topics.tid"), primary_key=True),
                              Column('location_id', Integer, ForeignKey("exma_locations.lid")))
-    __table__ = Table('exma_events', meta, *props, autoload=True)
+    __table__ = Table('exma_events', connection.metadata, *props, autoload=True)
 
     topic = relationship("DbTopics", uselist=False)
     location = relationship("DbLocations", uselist=False)
@@ -167,28 +143,28 @@ class DbLocations(Base):
     """Handle the location data for the events from the database (table: exma_locations).
     """
     props = ColumnCollection(Column('lid', Integer, primary_key=True))
-    __table__ = Table('exma_locations', meta, *props, autoload=True)
+    __table__ = Table('exma_locations', connection.metadata, *props, autoload=True)
 
 
 class DbPixAlbums(Base):
     props = ColumnCollection(Column('a_id', Integer, primary_key=True),
                              Column('l_id', Integer, ForeignKey("exma_locations.lid")),
                              Column('thumb_id', Integer, ForeignKey('pixma_pics.pid')))
-    __table__ = Table('pixma_album', meta, *props, autoload=True)
+    __table__ = Table('pixma_album', connection.metadata, *props, autoload=True)
 
     location = relationship("DbLocations", uselist=False)
     thumbnail = relationship("DbPixPics", uselist=False, foreign_keys="DbPixAlbums.thumb_id", lazy="joined")
 
     @staticmethod
     def by_id(album_id):
-        return session.query(DbPixAlbums).filter_by(a_id=album_id).first()
+        return connection.session.query(DbPixAlbums).filter_by(a_id=album_id).first()
 
 
 class DbPixComments(Base):
     props = ColumnCollection(Column('msg_id', Integer, primary_key=True),
                              Column('picture_id', Integer, ForeignKey("pixma_pics.pid")),
                              Column('user_id', Integer, ForeignKey('ipb_members.id')))
-    __table__ = Table('pixma_comments', meta, *props, autoload=True)
+    __table__ = Table('pixma_comments', connection.metadata, *props, autoload=True)
 
     picture = relationship("DbPixPics")
     member = relationship("DbMembers")
@@ -198,7 +174,7 @@ class DbPixPeople(Base):
     props = ColumnCollection(Column('user', Integer, ForeignKey('ipb_members.id'), primary_key=True),
                              Column('picture_id', Integer, ForeignKey("pixma_pics.pid"), primary_key=True),
                              Column('album_id', Integer, ForeignKey('pixma_album.a_id')))
-    __table__ = Table('pixma_people', meta, *props, autoload=True)
+    __table__ = Table('pixma_people', connection.metadata, *props, autoload=True)
 
     member = relationship("DbMembers")
     picture = relationship("DbPixPics")
@@ -208,13 +184,13 @@ class DbPixPeople(Base):
 class DbPixPics(Base):
     props = ColumnCollection(Column('pid', Integer, primary_key=True),
                              Column('aid', Integer, ForeignKey('pixma_album.a_id')))
-    __table__ = Table('pixma_pics', meta, *props, autoload=True)
+    __table__ = Table('pixma_pics', connection.metadata, *props, autoload=True)
 
     album = relationship("DbPixAlbums", backref=backref("pictures"), foreign_keys="DbPixPics.aid")
 
     @staticmethod
     def by_id(pic_id):
-        return session.query(DbPixPics).filter_by(pid=pic_id).first()
+        return connection.session.query(DbPixPics).filter_by(pid=pic_id).first()
 
 
 class DbMessageTopics(Base):
@@ -236,7 +212,7 @@ class DbMessageTopics(Base):
                              Column('mt_to_id', Integer, ForeignKey('ipb_members.id')),
                              Column('mt_owner_id', Integer, ForeignKey('ipb_members.id')),
                              Column('mt_msg_id', Integer, ForeignKey('ipb_message_text.msg_id')))
-    __table__ = Table('ipb_message_topics', meta, *props, autoload=True)
+    __table__ = Table('ipb_message_topics', connection.metadata, *props, autoload=True)
 
     body = relationship("DbMessageText", backref=backref("headers"))
 
@@ -256,7 +232,7 @@ class DbMessageTopics(Base):
         :rtype: sqlalchemy.orm.query.Query
         :return: The query.
         """
-        qry = session.query(DbMessageTopics).filter(DbMessageTopics.owner == user)
+        qry = connection.session.query(DbMessageTopics).filter(DbMessageTopics.owner == user)
         if topic_id is not None:
             qry = qry.filter_by(mt_id=topic_id)
         return qry
@@ -269,7 +245,7 @@ class DbMessageText(Base):
     """
     props = ColumnCollection(Column('msg_id', Integer, primary_key=True),
                              Column('msg_author_id', Integer, ForeignKey('ipb_members.id')))
-    __table__ = Table('ipb_message_text', meta, *props, autoload=True)
+    __table__ = Table('ipb_message_text', connection.metadata, *props, autoload=True)
 
     author = relationship("DbMembers")
 
@@ -278,7 +254,7 @@ class DbMembers(Base, user.ApiUser):
     """This handles the ipb_members data within the exma ipb database
     """
     props = ColumnCollection(Column('id', Integer, primary_key=True))
-    __table__ = Table('ipb_members', meta, *props, autoload=True)
+    __table__ = Table('ipb_members', connection.metadata, *props, autoload=True)
 
     converge = relationship("DbMembersConverge", uselist=False)
     extra = relationship("DbMembersExtra", uselist=False)
@@ -326,7 +302,7 @@ class DbMembers(Base, user.ApiUser):
         :rtype: DbMembers or None
         :return: The found User or None.
         """
-        return session.query(DbMembers).filter_by(name=username).first()
+        return connection.session.query(DbMembers).filter_by(name=username).first()
 
     @staticmethod
     def by_id(user_id):
@@ -337,7 +313,7 @@ class DbMembers(Base, user.ApiUser):
         :rtype: DbMembers or None
         :return: The found User or None.
         """
-        return session.query(DbMembers).filter_by(id=user_id).first()
+        return connection.session.query(DbMembers).filter_by(id=user_id).first()
 
     def authenticated(self):
         """Tells if the user was authenticated.
@@ -352,12 +328,12 @@ class DbMembersConverge(Base):
     """Holds the password hash & salt (table ipb_members_converge)
     """
     props = ColumnCollection(Column('converge_id', Integer, ForeignKey("ipb_members.id"), primary_key=True))
-    __table__ = Table('ipb_members_converge', meta, *props, autoload=True)
+    __table__ = Table('ipb_members_converge', connection.metadata, *props, autoload=True)
 
 
 class DbMembersExtra(Base):
     props = ColumnCollection(Column('id', Integer, ForeignKey("ipb_members.id"), primary_key=True))
-    __table__ = Table('ipb_member_extra', meta, *props, autoload=True)
+    __table__ = Table('ipb_member_extra', connection.metadata, *props, autoload=True)
 
     def virtual_dirs(self):
         """Get a wrapper for the virtual message dirs of the user

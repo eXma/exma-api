@@ -5,7 +5,7 @@ from flask.ext.restful import marshal_with, abort
 from flask.ext import restful
 
 import db_backend
-
+from db_backend.config import connection
 
 class TopicList(restful.Resource):
     @marshal_with(fieldsets.topic_fields)
@@ -13,7 +13,7 @@ class TopicList(restful.Resource):
         guest_forums = db_backend.DbForums.guest_readable()
         guest_forum_ids = [f.id for f in guest_forums]
 
-        topic_qry = db_backend.session.query(db_backend.DbTopics).filter(
+        topic_qry = connection.session.query(db_backend.DbTopics).filter(
             db_backend.DbTopics.forum_id.in_(guest_forum_ids)).filter_by(approved=1).order_by(
             db_backend.DbTopics.last_post.desc()).limit(100)
         topic_qry = limit_query(topic_qry)
