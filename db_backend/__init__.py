@@ -147,6 +147,18 @@ class DbLocations(Base):
     __table__ = Table('exma_locations', connection.metadata, *props, autoload=True)
 
 
+class DbOrganizers(Base):
+    """Handles the organizers of events
+    """
+    props = ColumnCollection(Column('vid', Integer, primary_key=True),
+                             Column('location_id', Integer, ForeignKey('exma_locations.lid')),
+                             Column('mid', Integer, ForeignKey('ipb_members.id')))
+    __table__ = Table('exma_veranstalter', connection.metadata, *props, autoload=True)
+
+    location = relationship("DbLocations", uselist=False)
+    member = relationship("DbMembers", uselist=False)
+
+
 class DbPixAlbums(Base):
     props = ColumnCollection(Column('a_id', Integer, primary_key=True),
                              Column('l_id', Integer, ForeignKey("exma_locations.lid")),
