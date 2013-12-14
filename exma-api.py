@@ -1,5 +1,5 @@
-from api import user, messages, albums, topics
-from api.user import authorization
+from api import users, messages, albums, topics
+from api.users import authorization
 from flask import Flask, request
 
 import db_backend.config
@@ -35,7 +35,7 @@ def start():
     return 'eXma REST API!'
 
 
-app.register_blueprint(user.user_blueprint())
+app.register_blueprint(users.user_blueprint())
 app.register_blueprint(pixma_images.pixma_blueprint(), url_prefix="/piXma")
 app.register_blueprint(topics.topic_blueprint(), url_prefix="/topics")
 app.register_blueprint(albums.album_blueprint(), url_prefix="/messages")
