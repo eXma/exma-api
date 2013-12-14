@@ -1,31 +1,13 @@
 from api import user, messages, albums, topics
 from api.user import authorization
 from flask import Flask, request
-from flask.ext import restful
-from functools import wraps
 
 import db_backend
 import pixma_images
 
 
-def charset_fix_decorator(response_func):
-    """Fix the output mime-type by adding the charset information.
-    """
-
-    @wraps(response_func)
-    def wrapper(*args, **kwargs):
-        response = response_func(*args, **kwargs)
-        if ("charset" not in response.headers['Content-Type']):
-            response.headers['Content-Type'] += "; charset=UTF-8"
-        return response
-
-    return wrapper
-
-
 app = Flask(__name__)
 Flask.secret_key = r"af4thei1VaongahB7eiloo]Push@ieZohz{o2hjo?w&ahxaegh2zood0rie3i"
-
-api = restful.Api(app, decorators=[charset_fix_decorator])
 
 
 @app.teardown_request
@@ -47,7 +29,6 @@ def add_cors_header(resp):
 
 authorization.setup_auth(app)
 app.register_blueprint(user.user_blueprint())
-
 
 
 @app.route('/')

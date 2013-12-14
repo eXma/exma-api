@@ -1,4 +1,5 @@
 from api.representation import set_unicode_json_repesentation
+from api.request_helper import charset_fix_decorator
 from api.topics.ressources import TopicList, Topic, PostList
 from flask import Blueprint
 import flask_restful
@@ -7,7 +8,7 @@ import flask_restful
 def topic_blueprint():
     topic_bp = Blueprint("topics", __name__)
 
-    topic_api = flask_restful.Api()
+    topic_api = flask_restful.Api(decorators=[charset_fix_decorator])
     topic_api.init_app(topic_bp)
     set_unicode_json_repesentation(topic_api)
 

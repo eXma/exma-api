@@ -1,4 +1,5 @@
 from flask.ext.restful import reqparse
+from functools import wraps
 
 
 def limit_query(query):
@@ -22,3 +23,17 @@ def limit_query(query):
     if offset is not None and offset > 0:
         query = query.offset(offset)
     return query
+
+
+def charset_fix_decorator(response_func):
+    """Fix the output mime-type by adding the charset information.
+    """
+
+    @wraps(response_func)
+    def wrapper(*args, **kwargs):
+        response = response_func(*args, **kwargs)
+        if "charset" not in response.headers['Content-Type']:
+            response.headers['Content-Type'] += "; charset=UTF-8"
+        return response
+
+    return wrapper
