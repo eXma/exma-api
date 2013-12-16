@@ -1,4 +1,4 @@
-from api import users, messages, albums, topics
+from api import users, messages, albums, topics, representation
 from api.users import authorization
 from flask import Flask, request
 
@@ -28,7 +28,7 @@ def add_cors_header(resp):
 
 
 authorization.setup_auth(app)
-
+representation.configure_default_json()
 
 @app.route('/')
 def start():
