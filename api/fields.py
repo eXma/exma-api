@@ -4,6 +4,24 @@ from flask.ext.restful.fields import to_marshallable_type
 import db_backend
 
 
+class OptionalNestedField(fields.Raw):
+    _optional_nested = True
+
+    def __init__(self, nested, plain,  plain_key, default=None, attribute=None):
+        super().__init__(default, attribute)
+        self._plain_key = plain_key
+        self._plain = plain
+        self._nested = nested if not isinstance(nested, type) else nested()
+
+    def key_field(self):
+        pass
+
+    def nested_fieldset(self):
+        return self._nested
+
+
+
+
 class LazyNestedField(fields.Nested):
     """This os a nested field that returns None if the key does not exist.
 
