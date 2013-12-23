@@ -9,7 +9,6 @@ class FieldsetMeta(type):
         cls._unbound_fields = None
         cls._metadata_cls = None
 
-
     def __call__(cls, *args, **kwargs):
         if cls._unbound_fields is None:
             fields = []
@@ -25,6 +24,7 @@ class FieldsetMeta(type):
                 if 'Meta' in mro_class.__dict__:
                     bases.append(mro_class.Meta)
             cls._metadata_cls = type('Meta', tuple(bases), {})
+        # noinspection PyArgumentList
         return type.__call__(cls, *args, **kwargs)
 
     def __setattr__(cls, name, value):
@@ -133,6 +133,7 @@ class FieldSetParser(object):
     def __init__(self, possible_fields):
         self.possible_fields = set(possible_fields)
 
+    # noinspection PyUnusedLocal
     def __call__(self, value, *args, **kwargs):
         if not isinstance(value, str):
             raise ValueError("Need a str")
@@ -153,10 +154,9 @@ class Fieldset(FieldsetBase):
     def __init__(self):
         # noinspection PyCallingNonCallable
         meta_obj = self._metadata_cls()
-        # noinspection PyArgumentList
+        # noinspection PyArgumentList,PyTypeChecker
         super().__init__(dict(self._unbound_fields), meta=meta_obj)
         self._parser = None
-
 
     def _parse_request_overrides(self):
         if self._parser is None:
@@ -166,7 +166,6 @@ class Fieldset(FieldsetBase):
             self._parser = parser
         result = self._parser.parse_args()
         return getattr(result, self.meta.fields_kw), getattr(result, self.meta.embedd_kw)
-
 
     def marshall_dict(self, selected_fields=None, selected_embed=None):
         """
