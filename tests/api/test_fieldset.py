@@ -3,6 +3,7 @@ from unittest.mock import patch
 from api import fieldset
 from flask import Flask
 from flask.ext.restful import fields
+from api import fields as api_fields
 
 
 # noinspection PyProtectedMember
@@ -27,7 +28,7 @@ class TestSimpleFieldset(unittest.TestCase):
         self.assertEqual(len(dummy._default_embedd), 0)
         self.assertIsInstance(dummy._default_embedd, set)
 
-        self.assertEqual(dummy.mashall_dict(), {})
+        self.assertEqual(dummy.marshall_dict(), {})
 
     def test_0020_simple_fields(self):
         class MyFieldset(fieldset.Fieldset):
@@ -64,7 +65,7 @@ class TestSimpleFieldset(unittest.TestCase):
         self.assertEqual(len(dummy._default_embedd), 0)
         self.assertIsInstance(dummy._default_embedd, set)
 
-        marshall = dummy.mashall_dict()
+        marshall = dummy.marshall_dict()
         self.assertIsInstance(marshall, dict)
         self.assertEqual(len(marshall), 3)
         self.assertIn("test01", marshall)
@@ -75,7 +76,7 @@ class TestSimpleFieldset(unittest.TestCase):
         self.assertIn("test04", marshall)
         self.assertEqual(marshall["test04"], dummy.test04)
 
-        marshall = dummy.mashall_dict(selected_fields={"test01", "test02"})
+        marshall = dummy.marshall_dict(selected_fields={"test01", "test02"})
         self.assertIsInstance(marshall, dict)
         self.assertEqual(len(marshall), 2)
         self.assertIn("test01", marshall)
@@ -123,7 +124,7 @@ class TestSimpleFieldset(unittest.TestCase):
         self.assertEqual(len(dummy._default_embedd), 0)
         self.assertIsInstance(dummy._default_embedd, set)
 
-        marshall = dummy.mashall_dict()
+        marshall = dummy.marshall_dict()
         self.assertIsInstance(marshall, dict)
         self.assertEqual(len(marshall), 2)
         self.assertIn("test01", marshall)
@@ -133,7 +134,7 @@ class TestSimpleFieldset(unittest.TestCase):
         self.assertIn("test04", marshall)
         self.assertEqual(marshall["test04"], dummy.test04)
 
-        marshall = dummy.mashall_dict(selected_fields={"test01", "test02"})
+        marshall = dummy.marshall_dict(selected_fields={"test01", "test02"})
         self.assertIsInstance(marshall, dict)
         self.assertEqual(len(marshall), 2)
         self.assertIn("test01", marshall)
@@ -279,3 +280,20 @@ class TestSimpleFieldsetMarshallDecorator(unittest.TestCase):
             self.assertEqual(len(result), 2)
             self.assertIn("test01", result)
             self.assertIn("test02", result)
+
+
+class TestNestedFieldset(unittest.TestCase):
+    def test_simple_setup(self):
+        class SimpleNestedFieldset(fieldset.Fieldset):
+            nest01 = fields.Integer
+            nest02 = fields.Boolean
+
+        class MyFieldSet(fieldset.Fieldset):
+            test01 = fields.Boolean
+            test02 = api_fields.OptionalNestedField(SimpleNestedFieldset, None, None)
+
+        dummy = MyFieldSet()
+        self.assertEqual(dummy.marshall_dict(), {"test01": MyFieldSet.test01,
+                                                 "test02": {"nest01": SimpleNestedFieldset.nest01,
+                                                            "nest02": SimpleNestedFieldset.nest02}})
+
