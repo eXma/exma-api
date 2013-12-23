@@ -168,10 +168,10 @@ class Fieldset(FieldsetBase):
         return getattr(result, self.meta.fields_kw), getattr(result, self.meta.embedd_kw)
 
 
-    def mashall_dict(self, selected_fields=None, selected_embedd=None):
+    def marshall_dict(self, selected_fields=None, selected_embed=None):
         """
         :type selected_fields: set[str]
-        :type selected_embedd: set[str]
+        :type selected_embed: set[str]
         """
         result_dict = {}
         if selected_fields is None or len(selected_fields) == 0:
@@ -179,10 +179,10 @@ class Fieldset(FieldsetBase):
 
         fields_direct = selected_fields.intersection(self._fields.keys())
 
-        if selected_embedd is None:
-            selected_embedd = self._default_embedd
+        if selected_embed is None:
+            selected_embed = self._default_embedd
 
-        embedd_direct = selected_embedd.intersection(fields_direct)
+        embed_direct = selected_embed.intersection(fields_direct)
 
         filtered_nested = defaultdict(set)
         for nested in selected_fields - fields_direct:
@@ -190,14 +190,14 @@ class Fieldset(FieldsetBase):
             filtered_nested[field].add(nested_field)
 
         filtered_embedd = defaultdict(set)
-        for embedd in selected_embedd - embedd_direct:
-            field, nested_field = embedd.split(".", 1)
+        for embed in selected_embed - embed_direct:
+            field, nested_field = embed.split(".", 1)
             filtered_embedd[field].add(nested_field)
 
         for field in fields_direct:
             if field in self._nested:
-                if field in embedd_direct:
-                    result_dict[field] = self._fields[field].nested_fieldset().mashall_dict(filtered_nested[field])
+                if field in embed_direct:
+                    result_dict[field] = self._fields[field].nested_fieldset().marshall_dict(filtered_nested[field])
                 else:
                     result_dict[field] = self._fields[field].key_field()
             else:
@@ -210,7 +210,7 @@ class Fieldset(FieldsetBase):
         def wrapper(*args, **kwargs):
             resp = f(*args, **kwargs)
             parsed = self._parse_request_overrides()
-            marshall_data = self.mashall_dict(*parsed)
+            marshall_data = self.marshall_dict(*parsed)
             if isinstance(resp, tuple):
                 data, code, headers = unpack(resp)
                 return marshal(data, marshall_data), code, headers
