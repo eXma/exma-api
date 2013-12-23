@@ -280,7 +280,7 @@ class TestSimpleFieldsetMarshallDecorator(unittest.TestCase):
 
 
 class TestNestedFieldset(unittest.TestCase):
-    def test_simple_setup(self):
+    def test_0010_simple_setup(self):
         class SimpleNestedFieldset(fieldset.Fieldset):
             nest01 = fields.Integer
             nest02 = fields.Boolean
@@ -293,3 +293,26 @@ class TestNestedFieldset(unittest.TestCase):
         self.assertEqual(dummy.marshall_dict(), {"test01": MyFieldSet.test01,
                                                  "test02": {"nest01": SimpleNestedFieldset.nest01,
                                                             "nest02": SimpleNestedFieldset.nest02}})
+        self.assertListEqual(sorted(dummy.all_field_names),
+                             sorted(["test01", "test02", "test02.nest01", "test02.nest02"]))
+        self.assertListEqual(sorted(dummy.nested_field_names),
+                             sorted(["test02"]))
+
+    def test_0020_simple_multiple_nesting(self):
+        class SimpleNestedFieldset2(fieldset.Fieldset):
+            nestnest01 = fields.Integer
+            nestnest02 = fields.Boolean
+
+        class SimpleNestedFieldset1(fieldset.Fieldset):
+            nest01 = api_fields.OptionalNestedField(SimpleNestedFieldset2, None, None)
+            nest02 = fields.Boolean
+
+        class MyFieldSet(fieldset.Fieldset):
+            test01 = fields.Boolean
+            test02 = api_fields.OptionalNestedField(SimpleNestedFieldset1, None, None)
+
+        dummy = MyFieldSet()
+        self.assertEqual(dummy.marshall_dict(), {"test01": MyFieldSet.test01,
+                                                 "test02": {"nest01": {"nestnest01": SimpleNestedFieldset2.nestnest01,
+                                                                       "nestnest02": SimpleNestedFieldset2.nestnest02},
+                                                            "nest02": SimpleNestedFieldset1.nest02}})
