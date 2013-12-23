@@ -1,13 +1,12 @@
 from flask import url_for, request
 from flask.ext.restful import fields, marshal
 from flask.ext.restful.fields import to_marshallable_type
-import db_backend
 
 
 class OptionalNestedField(fields.Raw):
     _optional_nested = True
 
-    def __init__(self, nested, plain,  plain_key, default=None, attribute=None):
+    def __init__(self, nested, plain, plain_key, default=None, attribute=None):
         super().__init__(default, attribute)
         self._plain_key = plain_key
         self._plain = plain
@@ -18,8 +17,6 @@ class OptionalNestedField(fields.Raw):
 
     def nested_fieldset(self):
         return self._nested
-
-
 
 
 class LazyNestedField(fields.Nested):
@@ -37,14 +34,17 @@ class LazyNestedField(fields.Nested):
         return marshal(data[key], self.nested)
 
 
-class UsernameField(fields.Raw):
-    """Filter out the username from a members object
+class ObjectMemberField(fields.Raw):
+    """Get a member value from the value object as field value
     """
+    def __init__(self, member, default=None, attribute=None):
+        super().__init__(default=default, attribute=attribute)
+        self.member = member
 
     def format(self, value):
-        if not isinstance(value, db_backend.DbMembers):
-            return None
-        return value.name
+        if hasattr(value, self.member):
+            return getattr(value, self.member)
+        return None
 
 
 class PixmaUrl(fields.Raw):
