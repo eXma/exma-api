@@ -7,7 +7,7 @@ class FieldsetMeta(type):
     def __init__(cls, what, bases, attrs):
         super().__init__(what, bases, attrs)
         cls._unbound_fields = None
-        cls._wtforms_meta = None
+        cls._metadata_cls = None
 
 
     def __call__(cls, *args, **kwargs):
@@ -19,12 +19,12 @@ class FieldsetMeta(type):
                     if hasattr(unbound_field, 'format') and hasattr(unbound_field, "output"):
                         fields.append((name, unbound_field))
             cls._unbound_fields = fields
-        if cls._wtforms_meta is None:
+        if cls._metadata_cls is None:
             bases = []
             for mro_class in cls.__mro__:
                 if 'Meta' in mro_class.__dict__:
                     bases.append(mro_class.Meta)
-            cls._wtforms_meta = type('Meta', tuple(bases), {})
+            cls._metadata_cls = type('Meta', tuple(bases), {})
         return type.__call__(cls, *args, **kwargs)
 
     def __setattr__(cls, name, value):
@@ -32,7 +32,7 @@ class FieldsetMeta(type):
         Add an attribute to the class, clearing `_unbound_fields` if needed.
         """
         if name == 'Meta':
-            cls._wtforms_meta = None
+            cls._metadata_cls = None
         elif not name.startswith('_') and hasattr(value, 'format') and hasattr(value, "output"):
             cls._unbound_fields = None
         type.__setattr__(cls, name, value)
@@ -152,7 +152,7 @@ class Fieldset(FieldsetBase):
 
     def __init__(self):
         # noinspection PyCallingNonCallable
-        meta_obj = self._wtforms_meta()
+        meta_obj = self._metadata_cls()
         # noinspection PyArgumentList
         super().__init__(dict(self._unbound_fields), meta=meta_obj)
         self._parser = None
