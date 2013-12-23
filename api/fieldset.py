@@ -100,7 +100,7 @@ class FieldsetBase(object, metaclass=FieldsetMeta):
             if nested_field is not None:
                 nested_fieldset = nested_field.nested_fieldset()
                 if nested_fieldset is not None:
-                    for nested_field_name in nested_fieldset.all_fieldset_names:
+                    for nested_field_name in nested_fieldset.all_field_names:
                         names.append("%s.%s" % (name, nested_field_name))
         return names
 
@@ -120,6 +120,14 @@ class FieldsetBase(object, metaclass=FieldsetMeta):
             names.extend(self.meta.default_embedd)
         return set(names)
 
+    @property
+    def all_field_names(self):
+        return self._fields_recursive
+
+    @property
+    def nested_field_names(self):
+        return self._nested_recursive
+
 
 class FieldSetParser(object):
     def __init__(self, possible_fields):
@@ -130,7 +138,7 @@ class FieldSetParser(object):
             raise ValueError("Need a str")
 
         if not len(value):
-            return  None
+            return None
         elements = set(value.split(","))
         unknown = elements.difference(self.possible_fields)
         if len(unknown):
@@ -149,13 +157,6 @@ class Fieldset(FieldsetBase):
         super().__init__(dict(self._unbound_fields), meta=meta_obj)
         self._parser = None
 
-    @property
-    def all_field_names(self):
-        return self._fields_recursive
-
-    @property
-    def nested_field_names(self):
-        return self._nested_recursive
 
     def _parse_request_overrides(self):
         if self._parser is None:
