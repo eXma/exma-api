@@ -226,7 +226,6 @@ class TestSimpleFieldsetMarshallDecorator(unittest.TestCase):
             test02 = fields.String
             test04 = fields.Boolean
 
-
         @MyFieldset.do_marshall()
         def foo():
             return {"test01": 1, "test02": "bla", "test03": 3, "test04": False}
@@ -248,7 +247,6 @@ class TestSimpleFieldsetMarshallDecorator(unittest.TestCase):
             test02 = fields.String
             test04 = fields.Boolean
 
-
         @MyFieldset.do_marshall()
         def foo():
             return {"test01": 1, "test02": "bla", "test03": 3, "test04": False}
@@ -268,7 +266,6 @@ class TestSimpleFieldsetMarshallDecorator(unittest.TestCase):
             test01 = fields.Integer
             test02 = fields.String
             test04 = fields.Boolean
-
 
         @MyFieldset.do_marshall()
         def foo():
@@ -296,4 +293,3 @@ class TestNestedFieldset(unittest.TestCase):
         self.assertEqual(dummy.marshall_dict(), {"test01": MyFieldSet.test01,
                                                  "test02": {"nest01": SimpleNestedFieldset.nest01,
                                                             "nest02": SimpleNestedFieldset.nest02}})
-
