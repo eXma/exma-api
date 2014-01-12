@@ -6,14 +6,16 @@ from flask.ext.restful.fields import to_marshallable_type
 class OptionalNestedField(fields.Raw):
     _optional_nested = True
 
-    def __init__(self, nested, plain, plain_key, default=None, attribute=None):
+    def __init__(self, nested, plain_key, default=None, attribute=None, plain_field=None):
         super().__init__(default, attribute)
         self._plain_key = plain_key
-        self._plain = plain
+        self._plain_field = plain_field
         self._nested = nested if not isinstance(nested, type) else nested()
 
     def key_field(self):
-        pass
+        if self._plain_key is None:
+            return None
+        return ObjectMemberField(self._plain_key, self.default, self.attribute, self._plain_field)
 
     def nested_fieldset(self):
         return self._nested
@@ -37,13 +39,24 @@ class LazyNestedField(fields.Nested):
 class ObjectMemberField(fields.Raw):
     """Get a member value from the value object as field value
     """
-    def __init__(self, member, default=None, attribute=None):
+    def __init__(self, member, default=None, attribute=None, member_field=None):
         super().__init__(default=default, attribute=attribute)
         self.member = member
+        self.member_field = member_field
+
+    @property
+    def _embedded_instance(self):
+        if isinstance(self.member_field, type):
+            return self.member_field()
+        return self.member_field
 
     def format(self, value):
         if hasattr(value, self.member):
-            return getattr(value, self.member)
+            attr = getattr(value, self.member)
+            if self.member_field is None:
+                return attr
+            else:
+                return self._embedded_instance.format(attr)
         return None
 
 
