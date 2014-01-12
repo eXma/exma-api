@@ -49,9 +49,8 @@ class TestOptionalNestedField(unittest.TestCase):
         instance = api_fields.OptionalNestedField("NESTED", "test")
 
         self.assertEqual(instance.nested_fieldset(), "NESTED")
-        self.assertIsInstance( instance.key_field(), api_fields.ObjectMemberField)
+        self.assertIsInstance(instance.key_field(), api_fields.ObjectMemberField)
         self.assertEqual(instance.key_field().format(my_mock), 2)
-
 
     def test_0020_no_nested_key(self):
         my_mock = MagicMock()
@@ -63,7 +62,6 @@ class TestOptionalNestedField(unittest.TestCase):
         self.assertEqual(instance.nested_fieldset(), "NESTED")
         self.assertEqual(instance.key_field(), None)
 
-
     def test_0030_plain_field_type(self):
         my_mock = MagicMock()
         my_property = PropertyMock(return_value=2)
@@ -72,5 +70,5 @@ class TestOptionalNestedField(unittest.TestCase):
         instance = api_fields.OptionalNestedField("NESTED", "test", plain_field=fields.String)
 
         self.assertEqual(instance.nested_fieldset(), "NESTED")
-        self.assertIsInstance( instance.key_field(), api_fields.ObjectMemberField)
+        self.assertIsInstance(instance.key_field(), api_fields.ObjectMemberField)
         self.assertEqual(instance.key_field().format(my_mock), "2")
