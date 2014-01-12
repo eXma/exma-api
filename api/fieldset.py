@@ -24,7 +24,7 @@ class FieldsetMeta(type):
                 if 'Meta' in mro_class.__dict__:
                     bases.append(mro_class.Meta)
             cls._metadata_cls = type('Meta', tuple(bases), {})
-        # noinspection PyArgumentList
+            # noinspection PyArgumentList
         return type.__call__(cls, *args, **kwargs)
 
     def __setattr__(cls, name, value):
@@ -52,12 +52,6 @@ class DefaultMeta(object):
     default_embedd = None
     fields_kw = "fields"
     embedd_kw = "embedd"
-
-    def filter_fields(self, field_names, query_fields):
-        pass
-
-    def embedd(self, name, embedded):
-        pass
 
 
 class FieldsetBase(object, metaclass=FieldsetMeta):
@@ -178,25 +172,30 @@ class Fieldset(FieldsetBase):
 
         fields_direct = selected_fields.intersection(self._fields.keys())
 
-        if selected_embed is None:
+        if selected_embed is None or len(selected_embed) == 0:
             selected_embed = self._default_embedd
 
         embed_direct = selected_embed.intersection(fields_direct)
 
         filtered_nested = defaultdict(set)
         for nested in selected_fields - fields_direct:
+            if "." not in nested:
+                continue
             field, nested_field = nested.split(".", 1)
             filtered_nested[field].add(nested_field)
 
         filtered_embedd = defaultdict(set)
         for embed in selected_embed - embed_direct:
+            if "." not in embed:
+                continue
             field, nested_field = embed.split(".", 1)
             filtered_embedd[field].add(nested_field)
 
         for field in fields_direct:
             if field in self._nested:
                 if field in embed_direct:
-                    result_dict[field] = self._fields[field].nested_fieldset().marshall_dict(filtered_nested[field])
+                    result_dict[field] = self._fields[field].nested_fieldset().marshall_dict(filtered_nested[field],
+                                                                                             filtered_embedd[field])
                 else:
                     result_dict[field] = self._fields[field].key_field()
             else:
