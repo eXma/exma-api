@@ -6,6 +6,16 @@ from flask.ext.restful import fields
 from api import fields as api_fields
 
 
+def _convert_nested(mydict):
+    assert isinstance(mydict, dict)
+    result = dict(mydict)
+
+    for item in result:
+        if hasattr(result[item], "nested"):
+            result[item] = _convert_nested(result[item].nested)
+
+    return result
+
 # noinspection PyProtectedMember
 class TestSimpleFieldset(unittest.TestCase):
     def test_0010_empty(self):
@@ -290,9 +300,10 @@ class TestNestedFieldset(unittest.TestCase):
             test02 = api_fields.OptionalNestedField(SimpleNestedFieldset, None, None)
 
         dummy = MyFieldSet()
-        self.assertEqual(dummy.marshall_dict(), {"test01": MyFieldSet.test01,
-                                                 "test02": {"nest01": SimpleNestedFieldset.nest01,
-                                                            "nest02": SimpleNestedFieldset.nest02}})
+        to_check = _convert_nested(dummy.marshall_dict())
+        self.assertDictEqual(to_check, {"test01": MyFieldSet.test01,
+                                        "test02": {"nest01": SimpleNestedFieldset.nest01,
+                                                   "nest02": SimpleNestedFieldset.nest02}})
         self.assertListEqual(sorted(dummy.all_field_names),
                              sorted(["test01", "test02", "test02.nest01", "test02.nest02"]))
         self.assertListEqual(sorted(dummy.nested_field_names),
@@ -312,11 +323,11 @@ class TestNestedFieldset(unittest.TestCase):
             test02 = api_fields.OptionalNestedField(SimpleNestedFieldset1, None, None)
 
         dummy = MyFieldSet()
-        self.assertEqual(dummy.marshall_dict(), {"test01": MyFieldSet.test01,
-                                                 "test02": {"nest01": {"nestnest01": SimpleNestedFieldset2.nestnest01,
-                                                                       "nestnest02": SimpleNestedFieldset2.nestnest02},
-                                                            "nest02": SimpleNestedFieldset1.nest02}})
-
+        to_check = _convert_nested(dummy.marshall_dict())
+        self.assertEqual(to_check, {"test01": MyFieldSet.test01,
+                                    "test02": {"nest01": {"nestnest01": SimpleNestedFieldset2.nestnest01,
+                                                          "nestnest02": SimpleNestedFieldset2.nestnest02},
+                                               "nest02": SimpleNestedFieldset1.nest02}})
 
     def test_0030_default_embedd_nesting_setup(self):
         class SimpleNestedFieldset1(fieldset.Fieldset):
@@ -341,12 +352,13 @@ class TestNestedFieldset(unittest.TestCase):
             test04 = api_fields.OptionalNestedField(SimpleNestedFieldset3, None, None)
 
         dummy = MyFieldSet()
-        self.assertEqual(dummy.marshall_dict(), {"test01": MyFieldSet.test01,
-                                                 "test02": {"nest01": SimpleNestedFieldset1.nest01,
-                                                            "nest02": SimpleNestedFieldset1.nest02},
-                                                 "test03": {"nest01": SimpleNestedFieldset1.nest01,
-                                                            "nest02": SimpleNestedFieldset1.nest02},
-                                                 "test04": None})
+        to_check = _convert_nested(dummy.marshall_dict())
+        self.assertEqual(to_check, {"test01": MyFieldSet.test01,
+                                    "test02": {"nest01": SimpleNestedFieldset1.nest01,
+                                               "nest02": SimpleNestedFieldset1.nest02},
+                                    "test03": {"nest01": SimpleNestedFieldset1.nest01,
+                                               "nest02": SimpleNestedFieldset1.nest02},
+                                    "test04": None})
         self.assertListEqual(sorted(dummy.all_field_names),
                              sorted(["test01",
                                      "test02", "test02.nest01", "test02.nest02",
@@ -354,7 +366,6 @@ class TestNestedFieldset(unittest.TestCase):
                                      "test04", "test04.nest01", "test04.nest02", ]))
         self.assertListEqual(sorted(dummy.nested_field_names),
                              sorted(["test02", "test03", "test04"]))
-
 
     def test_0040_default_embedd_and_field_nesting_setup(self):
         class SimpleNestedFieldset1(fieldset.Fieldset):
@@ -380,9 +391,10 @@ class TestNestedFieldset(unittest.TestCase):
             test04 = api_fields.OptionalNestedField(SimpleNestedFieldset3, None, None)
 
         dummy = MyFieldSet()
-        self.assertEqual(dummy.marshall_dict(), {"test01": MyFieldSet.test01,
-                                                 "test03": {"nest01": SimpleNestedFieldset2.nest01,
-                                                            "nest02": SimpleNestedFieldset2.nest02}})
+        to_check = _convert_nested(dummy.marshall_dict())
+        self.assertEqual(to_check, {"test01": MyFieldSet.test01,
+                                    "test03": {"nest01": SimpleNestedFieldset2.nest01,
+                                               "nest02": SimpleNestedFieldset2.nest02}})
         self.assertListEqual(sorted(dummy.all_field_names),
                              sorted(["test01",
                                      "test02", "test02.nest01", "test02.nest02",
@@ -390,7 +402,6 @@ class TestNestedFieldset(unittest.TestCase):
                                      "test04", "test04.nest01", "test04.nest02", ]))
         self.assertListEqual(sorted(dummy.nested_field_names),
                              sorted(["test02", "test03", "test04"]))
-
 
     def test_0050_deafult_nested_fields(self):
         class SimpleNestedFieldset1(fieldset.Fieldset):
@@ -419,9 +430,10 @@ class TestNestedFieldset(unittest.TestCase):
             test04 = api_fields.OptionalNestedField(SimpleNestedFieldset3, None, None)
 
         dummy = MyFieldSet()
-        self.assertEqual(dummy.marshall_dict(), {"test01": MyFieldSet.test01,
-                                                 "test03": {"nest02": SimpleNestedFieldset2.nest02},
-                                                 "test04": {"nest01": SimpleNestedFieldset3.nest01}})
+        to_check = _convert_nested(dummy.marshall_dict())
+        self.assertEqual(to_check, {"test01": MyFieldSet.test01,
+                                    "test03": {"nest02": SimpleNestedFieldset2.nest02},
+                                    "test04": {"nest01": SimpleNestedFieldset3.nest01}})
         self.assertListEqual(sorted(dummy.all_field_names),
                              sorted(["test01",
                                      "test02", "test02.nest01", "test02.nest02",
@@ -457,14 +469,14 @@ class TestNestedFieldset(unittest.TestCase):
             test03 = api_fields.OptionalNestedField(SimpleNestedFieldset4, None, None)
 
         dummy = MyFieldSet()
-        self.maxDiff = None
-        self.assertEqual(dummy.marshall_dict(), {"test01": MyFieldSet.test01,
-                                                 "test02": {"nest01": SimpleNestedFieldset1.nest01,
-                                                            "nest02": SimpleNestedFieldset1.nest02},
-                                                 "test03": {"nest01": SimpleNestedFieldset1.nest01,
-                                                            "nest02": {"nest01": SimpleNestedFieldset1.nest01,
-                                                                       "nest02": SimpleNestedFieldset1.nest02},
-                                                            "nest03": None}})
+        to_check = _convert_nested(dummy.marshall_dict())
+        self.assertEqual(to_check, {"test01": MyFieldSet.test01,
+                                    "test02": {"nest01": SimpleNestedFieldset1.nest01,
+                                               "nest02": SimpleNestedFieldset1.nest02},
+                                    "test03": {"nest01": SimpleNestedFieldset1.nest01,
+                                               "nest02": {"nest01": SimpleNestedFieldset1.nest01,
+                                                          "nest02": SimpleNestedFieldset1.nest02},
+                                               "nest03": None}})
         self.assertListEqual(sorted(dummy.all_field_names),
                              sorted(["test01",
                                      "test02", "test02.nest01", "test02.nest02",

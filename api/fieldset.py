@@ -1,6 +1,7 @@
 from collections import defaultdict
-from flask.ext.restful import reqparse, unpack, marshal
+from flask.ext.restful import reqparse, unpack, marshal, fields
 from functools import wraps
+import api.fields as api_fields
 
 
 class FieldsetMeta(type):
@@ -194,8 +195,10 @@ class Fieldset(FieldsetBase):
         for field in fields_direct:
             if field in self._nested:
                 if field in embed_direct:
-                    result_dict[field] = self._fields[field].nested_fieldset().marshall_dict(filtered_nested[field],
-                                                                                             filtered_embedd[field])
+                    nested_fieldset = self._fields[field].nested_fieldset()
+                    result_dict[field] = fields.Nested(nested_fieldset.marshall_dict(filtered_nested[field],
+                                                                                     filtered_embedd[field]),
+                                                       **self._fields[field].nested_kwargs())
                 else:
                     result_dict[field] = self._fields[field].key_field()
             else:

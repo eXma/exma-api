@@ -1,3 +1,4 @@
+from pprint import pformat
 from flask import url_for, request
 from flask.ext.restful import fields, marshal
 from flask.ext.restful.fields import to_marshallable_type
@@ -6,11 +7,12 @@ from flask.ext.restful.fields import to_marshallable_type
 class OptionalNestedField(fields.Raw):
     _optional_nested = True
 
-    def __init__(self, nested, plain_key, default=None, attribute=None, plain_field=None):
+    def __init__(self, nested, plain_key, default=None, attribute=None, allow_none=False, plain_field=None):
         super().__init__(default, attribute)
         self._plain_key = plain_key
         self._plain_field = plain_field
         self._nested = nested if not isinstance(nested, type) else nested()
+        self._allow_none = allow_none
 
     def key_field(self):
         if self._plain_key is None:
@@ -19,6 +21,9 @@ class OptionalNestedField(fields.Raw):
 
     def nested_fieldset(self):
         return self._nested
+
+    def nested_kwargs(self):
+        return {"attribute": self.attribute, "default": self.default, "allow_null": self._allow_none}
 
 
 class LazyNestedField(fields.Nested):
@@ -39,6 +44,7 @@ class LazyNestedField(fields.Nested):
 class ObjectMemberField(fields.Raw):
     """Get a member value from the value object as field value
     """
+
     def __init__(self, member, default=None, attribute=None, member_field=None):
         super().__init__(default=default, attribute=attribute)
         self.member = member
