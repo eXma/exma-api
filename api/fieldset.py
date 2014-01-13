@@ -146,7 +146,7 @@ class FieldSetParser(object):
 class Fieldset(FieldsetBase):
     Meta = DefaultMeta
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         # noinspection PyCallingNonCallable
         meta_obj = self._metadata_cls()
         # noinspection PyArgumentList,PyTypeChecker
@@ -223,3 +223,7 @@ class Fieldset(FieldsetBase):
     @classmethod
     def do_marshall(cls, *args, **kwargs):
         return cls(*args, **kwargs)
+
+
+def marshall_with_fieldset(fieldset_cls, *args, **kwargs):
+    return fieldset_cls.do_marshall(*args, **kwargs)
