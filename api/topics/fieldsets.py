@@ -2,7 +2,7 @@ from flask.ext.restful import fields
 from flask.ext.restful_fieldsets import ObjectMemberField, Fieldset
 
 
-class TopicFieldset(Fieldset):
+class TopicFields(Fieldset):
     tid = fields.Integer
     title = fields.String
     last_post = fields.String

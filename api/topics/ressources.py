@@ -10,7 +10,7 @@ from db_backend.config import connection
 
 
 class TopicList(restful.Resource):
-    @marshall_with_fieldset(fieldsets.TopicFieldset)
+    @marshall_with_fieldset(fieldsets.TopicFields)
     def get(self, forum_id=None):
         guest_forums = db_backend.DbForums.guest_readable()
         guest_forum_ids = [f.id for f in guest_forums]
@@ -37,7 +37,7 @@ class PostList(restful.Resource):
 
 
 class Topic(restful.Resource):
-    @marshall_with_fieldset(fieldsets.TopicFieldset)
+    @marshall_with_fieldset(fieldsets.TopicFields)
     def get(self, topic_id=None):
         topic = db_backend.DbTopics.by_id(topic_id, authorization.current_user.perm_masks)
         if topic is None:
