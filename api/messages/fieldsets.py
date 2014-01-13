@@ -1,5 +1,5 @@
 from flask.ext.restful import fields
-from api.fields import LazyNestedField, UsernameField, ObjectMemberField
+from api.fields import LazyNestedField, ObjectMemberField
 
 body_fields = {
     'id': fields.Integer(attribute="msg_id"),
