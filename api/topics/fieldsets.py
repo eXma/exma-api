@@ -1,5 +1,5 @@
-from api.fieldset import Fieldset
 from flask.ext.restful import fields
+from flask.ext.restful_fieldsets import ObjectMemberField, Fieldset
 
 
 class TopicFieldset(Fieldset):
