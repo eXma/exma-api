@@ -1,8 +1,8 @@
-from api.fieldset import marshall_with_fieldset
 from api.request_helper import limit_query
 from api.topics import fieldsets
 from api.users import authorization
 from flask.ext.restful import abort
+from flask.ext.restful_fieldsets import marshall_with_fieldset
 from flask.ext import restful
 
 import db_backend
