@@ -2,7 +2,7 @@ from api.request_helper import limit_query
 from api.topics import fieldsets
 from api.users import authorization
 from flask.ext.restful import abort
-from flask.ext.restful_fieldsets import marshall_with_fieldset
+from flask.ext.restful_fieldsets import marshal_with_fieldset
 from flask.ext import restful
 
 import db_backend
@@ -10,7 +10,7 @@ from db_backend.config import connection
 
 
 class TopicList(restful.Resource):
-    @marshall_with_fieldset(fieldsets.TopicFields)
+    @marshal_with_fieldset(fieldsets.TopicFields)
     def get(self, forum_id=None):
         guest_forums = db_backend.DbForums.guest_readable()
         guest_forum_ids = [f.id for f in guest_forums]
@@ -26,7 +26,7 @@ class TopicList(restful.Resource):
 
 
 class PostList(restful.Resource):
-    @marshall_with_fieldset(fieldsets.PostFields)
+    @marshal_with_fieldset(fieldsets.PostFields)
     def get(self, topic_id):
         topic = db_backend.DbTopics.by_id(topic_id, authorization.current_user.perm_masks)
         if topic is None:
@@ -37,7 +37,7 @@ class PostList(restful.Resource):
 
 
 class Topic(restful.Resource):
-    @marshall_with_fieldset(fieldsets.TopicFields)
+    @marshal_with_fieldset(fieldsets.TopicFields)
     def get(self, topic_id=None):
         topic = db_backend.DbTopics.by_id(topic_id, authorization.current_user.perm_masks)
         if topic is None:
