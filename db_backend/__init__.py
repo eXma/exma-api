@@ -1,6 +1,9 @@
+import datetime
+from dateutil import rrule
 from db_backend.config import connection
+from db_backend.events import make_event_instances
 
-from sqlalchemy import Table, Column, Integer, ForeignKey
+from sqlalchemy import Table, Column, Integer, ForeignKey, and_, or_
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
@@ -138,6 +141,56 @@ class DbEvents(Base):
         if self.category in self.all_categories:
             return self.all_categories[self.category]
         return "(unknown)"
+
+    @property
+    def start_date(self):
+        return datetime.datetime.fromtimestamp(self.start)
+
+    @property
+    def end_date(self):
+        return datetime.datetime.fromtimestamp(self.end)
+
+    @property
+    def recurrence_interval(self):
+        if self.type == 0:
+            return rrule.DAILY
+        else:
+            return rrule.WEEKLY
+
+    @property
+    def recurrence_rule(self):
+        """Get the rrule for this event
+
+        :rtype: rrule.rrule
+        :return:
+        """
+        return rrule.rrule(self.recurrence_interval,
+                           dtstart=self.start_date,
+                           until=self.end_date)
+
+    def instances_between(self, start, end):
+        return make_event_instances(self, start, end)
+
+    @classmethod
+    def query_between(cls, start, end):
+        """Create a query between the given dates.
+
+        :param start: The start timestamp (inclusive)
+        :type start: datetime.datetime
+        :param end: The end timestamp (exclusive)
+        :type end: datetime.datetime
+        :return: A queryset between the given dates
+        :rtype: sqlalchemy.orm.query.Query
+        """
+        start_timestamp = int(start.timestamp())
+        end_timestamp = int(end.timestamp())
+        return connection.session.query(DbEvents).filter(
+            or_(and_(DbEvents.start >= start_timestamp,
+                     DbEvents.start < end_timestamp),
+                and_(DbEvents.end >= start_timestamp,
+                     DbEvents.end < end_timestamp),
+                and_(DbEvents.start < start_timestamp,
+                     DbEvents.end > end_timestamp)))
 
 
 class DbLocations(Base):
