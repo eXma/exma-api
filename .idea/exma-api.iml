@@ -9,7 +9,7 @@
     <option name="requirementsPath" value="" />
   </component>
   <component name="PyDocumentationSettings">
-    <option name="myDocStringFormat" value="Plain" />
+    <option name="myDocStringFormat" value="reStructuredText" />
   </component>
   <component name="TemplatesService">
     <option name="TEMPLATE_CONFIGURATION" value="Jinja2" />

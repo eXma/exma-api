@@ -1,4 +1,4 @@
-from api import users, messages, albums, topics, representation
+from api import users, messages, albums, topics, representation, events
 from api.users import authorization
 from flask import Flask, request
 
@@ -38,8 +38,9 @@ def start():
 app.register_blueprint(users.user_blueprint())
 app.register_blueprint(pixma_images.pixma_blueprint(), url_prefix="/piXma")
 app.register_blueprint(topics.topic_blueprint(), url_prefix="/topics")
-app.register_blueprint(albums.album_blueprint(), url_prefix="/messages")
+app.register_blueprint(albums.album_blueprint(), url_prefix="/pixma")
 app.register_blueprint(messages.message_blueprint(), url_prefix="/messages")
+app.register_blueprint(events.event_blueprint(), url_prefix="/events")
 
 if __name__ == '__main__':
     app.debug = True
