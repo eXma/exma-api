@@ -1,7 +1,7 @@
 import datetime
 from dateutil import rrule
 from db_backend.config import connection
-from db_backend.events import make_event_instances
+from db_backend.events import make_event_instances, EventCategory
 
 from sqlalchemy import Table, Column, Integer, ForeignKey, and_, or_
 
@@ -120,16 +120,6 @@ class DbEvents(Base):
     topic = relationship("DbTopics", uselist=False)
     location = relationship("DbLocations", uselist=False)
 
-    all_categories = {
-        0: "Keine",
-        1: "Party",
-        2: "Kunst oder Kultur",
-        3: "Kneipe oder Club",
-        4: "Freizeit oder Erholung",
-        5: "Studentenclubs",
-        6: "Dresdner Studententage",
-        7: "Forschung und Wissen"
-    }
 
     @property
     def category_name(self):
@@ -138,9 +128,8 @@ class DbEvents(Base):
         :rtype: unicode
         :return: The Category name
         """
-        if self.category in self.all_categories:
-            return self.all_categories[self.category]
-        return "(unknown)"
+        category = EventCategory.by_id(self.category)
+        return category.name
 
     @property
     def start_date(self):

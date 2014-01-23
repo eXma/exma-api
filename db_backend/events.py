@@ -24,6 +24,63 @@ def make_event_instances(db_event, start, end):
     return instances
 
 
+class EventCategory(object):
+    _event_categories = {}
+    _category_tags = {}
+
+    def __init__(self, category_id, tag, name):
+        """Initialize a category object.
+
+        :param category_id: The id of the category.
+        :type category_id: int
+        :param tag: The tag of the category.
+        :type tag: str
+        :param name: The name of the category.
+        :type name: str
+        """
+        self.id = category_id
+        self.tag = tag
+        self.name = name
+
+    @classmethod
+    def by_id(cls, category_id):
+        if category_id in cls._event_categories:
+            return cls._event_categories[category_id]
+        return cls._unknown()
+
+    @classmethod
+    def by_tag(cls, tag):
+        if tag in cls._category_tags:
+            category_id = cls._category_tags[tag]
+            if category_id in cls._event_categories:
+                return cls._event_categories[category_id]
+        return cls._unknown()
+
+    @staticmethod
+    def _unknown():
+        return EventCategory(-1, "unknown", "(UNBEKANNT)")
+
+    @classmethod
+    def make(cls, category_id, tag, name):
+        cls._event_categories[category_id] = EventCategory(category_id, tag, name)
+        cls._category_tags[tag] = category_id
+
+    @classmethod
+    def all_categories(cls):
+        categories = cls._event_categories.values()
+        return sorted(categories, key=lambda x: x.id)
+
+
+EventCategory.make(0, "none", "Keine", )
+EventCategory.make(1, "party", "Party", )
+EventCategory.make(2, "culture", "Kunst oder Kultur", )
+EventCategory.make(3, "club", "Kneipe oder Club", )
+EventCategory.make(4, "relax", "Freizeit oder Erholung", )
+EventCategory.make(5, "studentclub", "Studentenclubs", )
+EventCategory.make(6, "studentday", "Dresdner Studententage", )
+EventCategory.make(7, "science", "Forschung und Wissen")
+
+
 class EventInstance(object):
     """This is a wrapper of the DbEvents for a specific recurred
     instance of the event.
