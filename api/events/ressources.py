@@ -1,9 +1,11 @@
 from datetime import date, time, datetime, timedelta
+from functools import wraps
 from api.events import fieldsets
 from dateutil.relativedelta import relativedelta
 from flask.ext import restful
 
 import db_backend
+from db_backend.events import EventCategory
 from flask.ext.restful import reqparse, abort
 from flask.ext.restful_fieldsets import marshal_with_fieldset
 from sqlalchemy.orm import joinedload
@@ -77,14 +79,31 @@ class EventInterval():
         return self._end
 
 
+def _resolve_category(fn):
+    @wraps(fn)
+    def nufun(*args, **kwargs):
+        if "category_id" in kwargs:
+            category = EventCategory.by_id(kwargs.pop("category_id"))
+        elif "category_tag" in kwargs:
+            category = EventCategory.by_tag(kwargs.pop("category_tag"))
+        else:
+            category = None
+        return fn(*args, category=category, **kwargs)
+
+    return nufun
+
+
 class EventList(restful.Resource):
     @marshal_with_fieldset(fieldsets.EventFields)
-    def get(self):
+    @_resolve_category
+    def get(self, category=None):
         interval = EventInterval()
 
         event_qry = db_backend.DbEvents.query_between(interval.start,
                                                       interval.end)
         event_qry = event_qry.options(joinedload('topic'))
+        if category is not None:
+            event_qry = event_qry.filter(db_backend.DbEvents.category == category.id)
 
         event_list = []
         for event in event_qry:
@@ -92,6 +111,12 @@ class EventList(restful.Resource):
                                                       interval.end))
 
         return event_list
+
+
+class EventCategoryList(restful.Resource):
+    @marshal_with_fieldset(fieldsets.EventCategoryFields)
+    def get(self):
+        return EventCategory.all_categories()
 
 
 class Event(restful.Resource):

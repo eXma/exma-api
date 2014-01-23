@@ -10,3 +10,9 @@ class EventFields(Fieldset):
     editable = fields.Boolean
     allDay = fields.Boolean
 
+
+class EventCategoryFields(Fieldset):
+    id = fields.Integer
+    tag = fields.String
+    name = fields.String
+
