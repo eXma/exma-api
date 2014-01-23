@@ -20,8 +20,8 @@ class EventInterval():
 
     def _parse(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('since', type=int)
-        parser.add_argument('before', type=int)
+        parser.add_argument('start', type=int)
+        parser.add_argument('end', type=int)
         req_args = parser.parse_args()
 
         if req_args.get("start") is not None:
@@ -98,6 +98,7 @@ class EventList(restful.Resource):
     @_resolve_category
     def get(self, category=None):
         interval = EventInterval()
+        print("%s, %s" % (interval.start, interval.end))
 
         event_qry = db_backend.DbEvents.query_between(interval.start,
                                                       interval.end)
