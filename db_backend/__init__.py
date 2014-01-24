@@ -122,14 +122,13 @@ class DbEvents(Base):
 
 
     @property
-    def category_name(self):
-        """Get the name of the category of the event.
+    def category_instance(self):
+        """Get  the category of the event.
 
-        :rtype: unicode
-        :return: The Category name
+        :rtype: EventCategory
+        :return: The Category
         """
-        category = EventCategory.by_id(self.category)
-        return category.name
+        return EventCategory.by_id(self.category)
 
     @property
     def start_date(self):
