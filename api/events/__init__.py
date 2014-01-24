@@ -1,4 +1,4 @@
-from api.events.ressources import EventList, EventCategoryList
+from api.events.ressources import EventList, EventCategoryList, LocationList
 from api.request_helper import charset_fix_decorator
 from flask import Blueprint
 import flask_restful
@@ -12,5 +12,6 @@ def event_blueprint():
 
     event_api.add_resource(EventList,"/", "/category/<int:category_id>", "/category/<category_tag>")
     event_api.add_resource(EventCategoryList, "/categories")
+    event_api.add_resource(LocationList, "/locations")
 
     return event_bp

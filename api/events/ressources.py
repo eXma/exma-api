@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 from flask.ext import restful
 
 import db_backend
+from db_backend.config import connection
 from db_backend.events import EventCategory
 from flask.ext.restful import reqparse, abort
 from flask.ext.restful_fieldsets import marshal_with_fieldset
@@ -125,7 +126,10 @@ class Event(restful.Resource):
 
 
 class LocationList(restful.Resource):
-    pass
+    @marshal_with_fieldset(fieldsets.EventLocationFields)
+    def get(self):
+        location_qry = connection.session.query(db_backend.DbLocations)
+        return location_qry.all()
 
 
 class Location(restful.Resource):
