@@ -118,6 +118,10 @@ class EventInstance(object):
         return self.date_instance + _event_duration
 
     @property
+    def overall_end(self):
+        return self.db_instance.end_date
+
+    @property
     def title(self):
         return self.db_instance.topic.title
 

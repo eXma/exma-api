@@ -28,6 +28,8 @@ class EventFields(Fieldset):
     end = fields.DateTime
     editable = fields.Boolean
     allDay = fields.Boolean
+    type = fields.String(attribute="type_name")
+    overall_end = fields.DateTime
     category = OptionalNestedField(EventCategoryFields, "tag", attribute="category_instance")
     location = OptionalNestedField(EventLocationFields, "lid", attribute="location")
 

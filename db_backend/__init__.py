@@ -6,7 +6,7 @@ from db_backend.events import make_event_instances, EventCategory
 from sqlalchemy import Table, Column, Integer, ForeignKey, and_, or_
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref, joinedload
 from sqlalchemy.sql import ColumnCollection
 
 from db_backend.message import VirtualDir, DirList
@@ -73,7 +73,7 @@ class DbForums(Base):
         :rtype: bool
         :return: True if read is granted.
         """
-        return self.perms.is_fulfilled(user_mask_tuple, "read_perms")
+        return self.perms.is_fulfilled(user_mask_tuple, user.ForumPermissions.PERM_READ)
 
     @staticmethod
     def guest_readable():
@@ -121,6 +121,29 @@ class DbEvents(Base):
     location = relationship("DbLocations", uselist=False)
 
 
+    @staticmethod
+    def by_id(event_id, user_mask_tuple):
+        """Get the event for the given event id if user_mask is ok
+
+        :param event_id: The id of the event
+        :type event_id: int
+        :param user_mask_tuple: The mask of the current user
+        :type user_mask_tuple: list or tuple
+        :return: Teh event for this id or None
+        :rtype: DbEvents or None
+        """
+        event = connection.session.query(DbEvents) \
+            .filter_by(event_id=event_id) \
+            .options(joinedload(DbEvents.topic)) \
+            .options(joinedload(DbEvents.location)) \
+            .join(DbEvents.topic) \
+            .filter_by(approved=1).first()
+        if event is not None:
+            if event.topic.forum.can_read(user_mask_tuple):
+                return event
+        return None
+
+
     @property
     def category_instance(self):
         """Get  the category of the event.
@@ -146,6 +169,15 @@ class DbEvents(Base):
             return rrule.WEEKLY
 
     @property
+    def type_name(self):
+        if self.type != 0:
+            return "WEEKLY"
+        elif self.end_date - self.start_date < datetime.timedelta(days=1):
+            return "SINGLE"
+        else:
+            return "DAYLY"
+
+    @property
     def recurrence_rule(self):
         """Get the rrule for this event
 
@@ -158,6 +190,15 @@ class DbEvents(Base):
 
     def instances_between(self, start, end):
         return make_event_instances(self, start, end)
+
+    def first_instance(self, reference=None):
+        if reference is None:
+            reference = self.start_date
+        instance = make_event_instances(self, reference, reference)
+        if len(instance):
+            return instance[0]
+        return None
+
 
     @classmethod
     def query_between(cls, start, end):
@@ -172,7 +213,7 @@ class DbEvents(Base):
         """
         start_timestamp = int(start.timestamp())
         end_timestamp = int(end.timestamp())
-        return connection.session.query(DbEvents).filter(
+        qry = connection.session.query(DbEvents).filter(
             or_(and_(DbEvents.start >= start_timestamp,
                      DbEvents.start < end_timestamp),
                 and_(DbEvents.end >= start_timestamp,
@@ -304,14 +345,44 @@ class DbMessageText(Base):
     author = relationship("DbMembers")
 
 
+class DbGroups(Base):
+    props = ColumnCollection(Column('g_id', Integer, primary_key=True))
+    __table__ = Table('ipb_groups', connection.metadata, *props, autoload=True)
+
+
+    @property
+    def permission_masks(self):
+        return _split_set(self.g_perm_id)
+
+
+def _split_set(raw_value):
+    return set([int(item) for item in raw_value.split(",") if len(item)])
+
+
 class DbMembers(Base, user.ApiUser):
     """This handles the ipb_members data within the exma ipb database
     """
-    props = ColumnCollection(Column('id', Integer, primary_key=True))
+    props = ColumnCollection(Column('id', Integer, primary_key=True),
+                             Column('mgroup', Integer, ForeignKey("ipb_groups.g_id")))
     __table__ = Table('ipb_members', connection.metadata, *props, autoload=True)
 
     converge = relationship("DbMembersConverge", uselist=False)
     extra = relationship("DbMembersExtra", uselist=False)
+    primary_group = relationship("DbGroups", uselist=False)
+
+    @property
+    def secondary_group_ids(self):
+        return _split_set(self.mgroup_others)
+
+    @property
+    def group_permissions(self):
+        print(self.secondary_group_ids)
+        qry = connection.session.query(DbGroups.g_perm_id.label("perm")) \
+            .filter(DbGroups.g_id.in_(self.secondary_group_ids))
+        result = self.primary_group.permission_masks
+        for group_perms in qry:
+            result.update(_split_set(group_perms.perm))
+        return result
 
     def password_valid(self, password):
         """Check if a given password is the password of the user.
@@ -376,6 +447,9 @@ class DbMembers(Base, user.ApiUser):
         :return: True if so.
         """
         return not self.is_banned()
+
+    def perm_masks(self):
+        return self.group_permissions
 
 
 class DbMembersConverge(Base):

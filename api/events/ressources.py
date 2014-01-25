@@ -1,4 +1,5 @@
 from datetime import date, time, datetime, timedelta
+from api.users import authorization
 from functools import wraps
 from api.events import fieldsets
 from dateutil.relativedelta import relativedelta
@@ -104,6 +105,7 @@ class EventList(restful.Resource):
         event_qry = db_backend.DbEvents.query_between(interval.start,
                                                       interval.end)
         event_qry = event_qry.options(joinedload('topic'))
+        event_qry = event_qry.options(joinedload('location'))
         if category is not None:
             event_qry = event_qry.filter(db_backend.DbEvents.category == category.id)
 
@@ -122,7 +124,15 @@ class EventCategoryList(restful.Resource):
 
 
 class Event(restful.Resource):
-    pass
+    @marshal_with_fieldset(fieldsets.EventFields)
+    def get(self, event_id):
+        event = db_backend.DbEvents.by_id(event_id, authorization.current_user.perm_masks)
+        if event is None:
+            abort(404, message="Event not found")
+        event_instance = event.first_instance()
+        if event_instance is None:
+            abort(404, message="No event instance found")
+        return event_instance
 
 
 class LocationList(restful.Resource):

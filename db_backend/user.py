@@ -10,6 +10,7 @@ class ForumPermissions(object):
     """This class handles the forum permissions.
 
     """
+    PERM_READ = "read_perms"
 
     def __init__(self, permission_array):
         """Initialize the permission object by parsing a permission string.
