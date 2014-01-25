@@ -376,12 +376,17 @@ class DbMembers(Base, user.ApiUser):
 
     @property
     def group_permissions(self):
-        print(self.secondary_group_ids)
-        qry = connection.session.query(DbGroups.g_perm_id.label("perm")) \
-            .filter(DbGroups.g_id.in_(self.secondary_group_ids))
+        """Get all permission masks that the user have from its group memberships
+
+        :rtype: set of int
+        :return: A set of group permission masks
+        """
         result = self.primary_group.permission_masks
-        for group_perms in qry:
-            result.update(_split_set(group_perms.perm))
+        if len(self.secondary_group_ids) > 0:
+            qry = connection.session.query(DbGroups.g_perm_id.label("perm")) \
+                .filter(DbGroups.g_id.in_(self.secondary_group_ids))
+            for group_perms in qry:
+                result.update(_split_set(group_perms.perm))
         return result
 
     def password_valid(self, password):
