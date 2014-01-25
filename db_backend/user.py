@@ -11,6 +11,10 @@ class ForumPermissions(object):
 
     """
     PERM_READ = "read_perms"
+    PERM_REPLY = 'reply_perms'
+    PERM_START = 'start_perms'
+    PERM_UPLOAD = 'upload_perms'
+    PERM_SHOW = 'show_perms'
 
     def __init__(self, permission_array):
         """Initialize the permission object by parsing a permission string.
