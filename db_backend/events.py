@@ -1,5 +1,4 @@
 import datetime
-import db_backend
 
 
 _event_duration = datetime.timedelta(hours=6)
@@ -9,7 +8,7 @@ def make_event_instances(db_event, start, end):
     """Create all event instances between the given interval
 
     :param db_event: The database event
-    :type db_event: db_backend.DbEvents
+    :type db_event: DbEvents
     :param start: The start date (including)
     :type start: datetime.datetime
     :param end: The end date (including)
