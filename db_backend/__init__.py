@@ -76,6 +76,21 @@ class DbForums(Base):
         return self.perms.is_fulfilled(user_mask_tuple, user.ForumPermissions.PERM_READ)
 
     @staticmethod
+    def readable_by(user_mask_set):
+        """Get a list of all db forums that are readable for the given mask.
+
+        :param user_mask_set: A collection of permission masks
+        :type user_mask_set: set of int
+        :rtype: list of DbForums
+        :return: The list of fetched forum objects.
+        """
+        forums = []
+        for forum in connection.session.query(DbForums):
+            if forum.can_read(user_mask_set):
+                forums.append(forum)
+        return forums
+
+    @staticmethod
     def guest_readable():
         """Get a list of all db forums that are readable fur guests.
 

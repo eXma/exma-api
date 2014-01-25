@@ -99,11 +99,11 @@ class UserBan(object):
     def __init__(self, start, end, duration):
         """Creates an instance.
 
-        :type start: datetime
+        :type start: datetime.datetime
         :param start: The start of the Ban.
-        :type end: datetime
+        :type end: datetime.datetime
         :param end: The end of the Ban.
-        :type duration: timedelta
+        :type duration: datetime.timedelta
         :param duration: The duration of the Ban.
         """
         self.start = start
@@ -136,7 +136,7 @@ class UserBan(object):
                         end = datetime.datetime.fromtimestamp(int(ban_parts[1]))
                         duration_hours = ban_parts[2]
                         if ban_parts[3] == "d":
-                            duration_hours = duration_hours * 24
+                            duration_hours *= 24
                         duration = datetime.timedelta(hours=duration_hours)
                     else:
                         end = datetime.datetime(year=datetime.MAXYEAR, day=31, month=12)
