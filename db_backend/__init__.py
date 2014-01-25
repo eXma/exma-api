@@ -26,7 +26,7 @@ class DbTopics(Base):
                              Column('forum_id', Integer, ForeignKey("ipb_forums.id")))
     __table__ = Table('ipb_topics', connection.metadata, *props, autoload=True)
 
-    forum = relationship("DbForums")
+    forum = relationship("DbForums", uselist=False)
     all_posts = relationship("DbPosts", backref=backref('topic'))
 
     @staticmethod
@@ -235,6 +235,7 @@ class DbEvents(Base):
                      DbEvents.end < end_timestamp),
                 and_(DbEvents.start < start_timestamp,
                      DbEvents.end > end_timestamp)))
+        return qry
 
 
 class DbLocations(Base):
@@ -468,6 +469,7 @@ class DbMembers(Base, user.ApiUser):
         """
         return not self.is_banned()
 
+    @property
     def perm_masks(self):
         return self.group_permissions
 

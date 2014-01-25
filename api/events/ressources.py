@@ -104,13 +104,15 @@ class EventList(restful.Resource):
 
         event_qry = db_backend.DbEvents.query_between(interval.start,
                                                       interval.end)
-        event_qry = event_qry.options(joinedload('topic'))
-        event_qry = event_qry.options(joinedload('location'))
+        event_qry = event_qry.options(joinedload(db_backend.DbEvents.topic).joinedload(db_backend.DbTopics.forum))
+        event_qry = event_qry.options(joinedload(db_backend.DbEvents.location))
         if category is not None:
             event_qry = event_qry.filter(db_backend.DbEvents.category == category.id)
 
         event_list = []
         for event in event_qry:
+            if not event.topic.forum.can_read(authorization.current_user.perm_masks):
+                continue
             event_list.extend(event.instances_between(interval.start,
                                                       interval.end))
 
