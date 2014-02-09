@@ -50,7 +50,6 @@ class EventInterval():
         self._start = start
         self._end = end
 
-
     @property
     def start(self):
         """Get the start date of the interval

@@ -35,12 +35,12 @@ def start():
     return 'eXma REST API!'
 
 
-app.register_blueprint(users.user_blueprint())
+app.register_blueprint(users.make_blueprint())
 app.register_blueprint(pixma_images.pixma_blueprint(), url_prefix="/piXma")
-app.register_blueprint(topics.topic_blueprint(), url_prefix="/topics")
-app.register_blueprint(albums.album_blueprint(), url_prefix="/pixma")
-app.register_blueprint(messages.message_blueprint(), url_prefix="/messages")
-app.register_blueprint(events.event_blueprint(), url_prefix="/events")
+app.register_blueprint(topics.make_blueprint(), url_prefix="/topics")
+app.register_blueprint(albums.make_blueprint(), url_prefix="/pixma")
+app.register_blueprint(messages.make_blueprint(), url_prefix="/messages")
+app.register_blueprint(events.make_blueprint(), url_prefix="/events")
 
 if __name__ == '__main__':
     app.debug = True
