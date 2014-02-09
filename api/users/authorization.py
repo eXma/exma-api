@@ -1,5 +1,5 @@
-import db_backend
-from db_backend.user import ApiUser
+from db_backend import mapping
+from db_backend.utils.user import ApiUser
 from flask.ext.restful import abort
 from functools import wraps
 from werkzeug.local import LocalProxy
@@ -42,7 +42,7 @@ def setup_auth(app):
         ctx.user = ApiUser()
         user_id = session.get("login_user_id")
         if user_id is not None:
-            user = db_backend.DbMembers.by_id(user_id)
+            user = mapping.DbMembers.by_id(user_id)
             if user is not None and not user.is_banned():
                 ctx.user = user
 

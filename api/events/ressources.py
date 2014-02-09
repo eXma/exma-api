@@ -3,9 +3,9 @@ from api.users import authorization
 from api.events import fieldsets
 from flask.ext import restful
 
-import db_backend
-from db_backend.config import connection
-from db_backend.events import EventCategory
+from db_backend import mapping
+from db_backend.mapping.config import connection
+from db_backend.utils.events import EventCategory
 from flask.ext.restful import abort
 from flask.ext.restful_fieldsets import marshal_with_fieldset
 from sqlalchemy.orm import joinedload
@@ -18,12 +18,12 @@ class EventList(restful.Resource):
         interval = EventInterval()
         print("%s, %s" % (interval.start, interval.end))
 
-        event_qry = db_backend.DbEvents.query_between(interval.start,
-                                                      interval.end)
-        event_qry = event_qry.options(joinedload(db_backend.DbEvents.topic).joinedload(db_backend.DbTopics.forum))
-        event_qry = event_qry.options(joinedload(db_backend.DbEvents.location))
+        event_qry = mapping.DbEvents.query_between(interval.start,
+                                                   interval.end)
+        event_qry = event_qry.options(joinedload(mapping.DbEvents.topic).joinedload(mapping.DbTopics.forum))
+        event_qry = event_qry.options(joinedload(mapping.DbEvents.location))
         if category is not None:
-            event_qry = event_qry.filter(db_backend.DbEvents.category == category.id)
+            event_qry = event_qry.filter(mapping.DbEvents.category == category.id)
 
         event_list = []
         for event in event_qry:
@@ -44,7 +44,7 @@ class EventCategoryList(restful.Resource):
 class Event(restful.Resource):
     @marshal_with_fieldset(fieldsets.EventFields)
     def get(self, event_id):
-        event = db_backend.DbEvents.by_id(event_id, authorization.current_user.perm_masks)
+        event = mapping.DbEvents.by_id(event_id, authorization.current_user.perm_masks)
         if event is None:
             abort(404, message="Event not found")
         event_instance = event.first_instance()
@@ -56,7 +56,7 @@ class Event(restful.Resource):
 class LocationList(restful.Resource):
     @marshal_with_fieldset(fieldsets.EventLocationFields)
     def get(self):
-        location_qry = connection.session.query(db_backend.DbLocations)
+        location_qry = connection.session.query(mapping.DbLocations)
         return location_qry.all()
 
 

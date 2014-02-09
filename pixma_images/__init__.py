@@ -5,7 +5,7 @@ from flask.ext.restful import abort
 
 import os
 from pixma_images import thumbnailer
-from db_backend.config import connection
+from db_backend.mapping.config import connection
 
 _pixma_bp = Blueprint("pixma", __name__)
 

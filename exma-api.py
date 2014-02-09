@@ -2,7 +2,7 @@ from api import users, messages, albums, topics, representation, events
 from api.users import authorization
 from flask import Flask, request
 
-import db_backend.config
+import db_backend.mapping.config
 import pixma_images
 
 
@@ -14,7 +14,7 @@ Flask.secret_key = r"af4thei1VaongahB7eiloo]Push@ieZohz{o2hjo?w&ahxaegh2zood0rie
 def shutdown_session(exception=None):
     """Cleanup the database session after a request.
     """
-    db_backend.config.connection.session.remove()
+    db_backend.mapping.config.connection.session.remove()
 
 
 @app.after_request

@@ -1,6 +1,7 @@
 from datetime import timedelta, datetime, date, time
+
 from dateutil.relativedelta import relativedelta
-from db_backend.events import EventCategory
+from db_backend.utils.events import EventCategory
 from flask.ext.restful import reqparse, abort
 from functools import wraps
 

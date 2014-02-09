@@ -1,5 +1,5 @@
 from api.users.authorization import current_user
-import db_backend
+from db_backend import mapping
 from flask import session
 from flask.ext import restful
 from flask.ext.restful import abort, reqparse
@@ -24,7 +24,7 @@ class Login(restful.Resource):
         parser.add_argument('password', type=str, required=True, help="Need a password!", location="form")
         args = parser.parse_args()
 
-        user = db_backend.DbMembers.by_name(ipb_mess.ipb_clean_value(args["login"]))
+        user = mapping.DbMembers.by_name(ipb_mess.ipb_clean_value(args["login"]))
         if user is None:
             abort(403, message="User not found!")
 

@@ -1,4 +1,3 @@
-from pprint import pformat
 from flask import url_for, request
 from flask.ext.restful import fields, marshal
 from flask.ext.restful.fields import to_marshallable_type

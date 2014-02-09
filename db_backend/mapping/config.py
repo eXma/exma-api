@@ -28,7 +28,7 @@ class Connection(object):
         self._session = None
 
     def _default_connection(self):
-        pw_file = os.path.join(os.path.dirname(__file__), "..", "exma_pw")
+        pw_file = os.path.join(os.path.dirname(__file__), "../../", "exma_pw")
         return 'mysql+cymysql://%s@127.0.0.1/exma?charset=utf8' % get_passwd(pw_file)
 
     @property
