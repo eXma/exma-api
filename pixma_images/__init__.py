@@ -1,5 +1,5 @@
 from api.users import authorization
-import db_backend
+from db_backend import mapping
 from flask import Blueprint, send_file, send_from_directory
 from flask.ext.restful import abort
 
@@ -23,7 +23,7 @@ def send_picture(pic_id, type_string):
     :type pic_id: int
     :type type_string: str or None
     """
-    pic = db_backend.DbPixPics.by_id(pic_id)
+    pic = mapping.DbPixPics.by_id(pic_id)
     if pic is None:
         abort(404)
 
