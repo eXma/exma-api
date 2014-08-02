@@ -12,8 +12,8 @@ class EventInterval():
     It can be parsed from the current request. The start and
     end date in the request is optional and can be computed.
 
-    If start and end is not given, then  "tomorrow" will be
-    the start date.
+    If start and end is not given, then the begin of the month
+    from "today" will be the start date.
     If end but not start is given, then the start date will
     be 1 month and one day before the given end date.
     If the end date is not given it will be one month and one
@@ -50,7 +50,7 @@ class EventInterval():
                                          time())
 
         if end is None:
-            end = datetime.combine(start.date() + relativedelta(day=1, months=+1),
+            end = datetime.combine(start.date() + relativedelta(months=+1),
                                    time())
 
         if end < start:
