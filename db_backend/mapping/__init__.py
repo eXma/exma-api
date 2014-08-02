@@ -6,7 +6,6 @@ from db_backend.utils.events import make_event_instances, EventCategory
 from sqlalchemy import Table, Column, Integer, ForeignKey, and_, or_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref, joinedload
-from sqlalchemy.sql import ColumnCollection
 from db_backend.utils.message import DirList
 from db_backend.utils import user
 
@@ -19,12 +18,16 @@ from db_backend.utils import user
 Base = declarative_base()
 
 
+def auto_table(name, *cols):
+    return Table(name, connection.metadata, *cols, autoload=True)
+
+
 class DbTopics(Base):
     """This handles the ipb_topics data within the exma ipb database
     """
-    props = ColumnCollection(Column('tid', Integer, primary_key=True),
-                             Column('forum_id', Integer, ForeignKey("ipb_forums.id")))
-    __table__ = Table('ipb_topics', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('ipb_topics',
+                           Column('tid', Integer, primary_key=True),
+                           Column('forum_id', Integer, ForeignKey("ipb_forums.id")))
 
     forum = relationship("DbForums", uselist=False)
     all_posts = relationship("DbPosts", backref=backref('topic'))
@@ -51,8 +54,8 @@ class DbForums(Base):
     """This handles the ipb_forum data within the exma ipb database.
     """
 
-    props = ColumnCollection(Column('id', Integer, primary_key=True))
-    __table__ = Table('ipb_forums', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('ipb_forums',
+                           Column('id', Integer, primary_key=True))
 
     @property
     def perms(self):
@@ -108,9 +111,9 @@ class DbForums(Base):
 class DbPosts(Base):
     """Handle the post data from the database (table: ipb_posts).
     """
-    props = ColumnCollection(Column('pid', Integer, primary_key=True),
-                             Column('topic_id', Integer, ForeignKey("ipb_topics.tid")))
-    __table__ = Table('ipb_posts', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('ipb_posts',
+                           Column('pid', Integer, primary_key=True),
+                           Column('topic_id', Integer, ForeignKey("ipb_topics.tid")))
 
     @staticmethod
     def by_topic_query(topic_id):
@@ -128,9 +131,9 @@ class DbPosts(Base):
 class DbEvents(Base):
     """Handle the events data in the database (table: exma_events).
     """
-    props = ColumnCollection(Column('event_id', Integer, ForeignKey("ipb_topics.tid"), primary_key=True),
-                             Column('location_id', Integer, ForeignKey("exma_locations.lid")))
-    __table__ = Table('exma_events', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('exma_events',
+                           Column('event_id', Integer, ForeignKey("ipb_topics.tid"), primary_key=True),
+                           Column('location_id', Integer, ForeignKey("exma_locations.lid")))
 
     topic = relationship("DbTopics", uselist=False)
     location = relationship("DbLocations", uselist=False)
@@ -241,27 +244,27 @@ class DbEvents(Base):
 class DbLocations(Base):
     """Handle the location data for the events from the database (table: exma_locations).
     """
-    props = ColumnCollection(Column('lid', Integer, primary_key=True))
-    __table__ = Table('exma_locations', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('exma_locations',
+                           Column('lid', Integer, primary_key=True))
 
 
 class DbOrganizers(Base):
     """Handles the organizers of events
     """
-    props = ColumnCollection(Column('vid', Integer, primary_key=True),
-                             Column('location_id', Integer, ForeignKey('exma_locations.lid')),
-                             Column('mid', Integer, ForeignKey('ipb_members.id')))
-    __table__ = Table('exma_veranstalter', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('exma_veranstalter',
+                           Column('vid', Integer, primary_key=True),
+                           Column('location_id', Integer, ForeignKey('exma_locations.lid')),
+                           Column('mid', Integer, ForeignKey('ipb_members.id')))
 
     location = relationship("DbLocations", uselist=False)
     member = relationship("DbMembers", uselist=False)
 
 
 class DbPixAlbums(Base):
-    props = ColumnCollection(Column('a_id', Integer, primary_key=True),
-                             Column('l_id', Integer, ForeignKey("exma_locations.lid")),
-                             Column('thumb_id', Integer, ForeignKey('pixma_pics.pid')))
-    __table__ = Table('pixma_album', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('pixma_album',
+                           Column('a_id', Integer, primary_key=True),
+                           Column('l_id', Integer, ForeignKey("exma_locations.lid")),
+                           Column('thumb_id', Integer, ForeignKey('pixma_pics.pid')))
 
     location = relationship("DbLocations", uselist=False)
     thumbnail = relationship("DbPixPics", uselist=False, foreign_keys="DbPixAlbums.thumb_id", lazy="joined")
@@ -272,20 +275,20 @@ class DbPixAlbums(Base):
 
 
 class DbPixComments(Base):
-    props = ColumnCollection(Column('msg_id', Integer, primary_key=True),
-                             Column('picture_id', Integer, ForeignKey("pixma_pics.pid")),
-                             Column('user_id', Integer, ForeignKey('ipb_members.id')))
-    __table__ = Table('pixma_comments', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('pixma_comments',
+                           Column('msg_id', Integer, primary_key=True),
+                           Column('picture_id', Integer, ForeignKey("pixma_pics.pid")),
+                           Column('user_id', Integer, ForeignKey('ipb_members.id')))
 
     picture = relationship("DbPixPics")
     member = relationship("DbMembers")
 
 
 class DbPixPeople(Base):
-    props = ColumnCollection(Column('user', Integer, ForeignKey('ipb_members.id'), primary_key=True),
-                             Column('picture_id', Integer, ForeignKey("pixma_pics.pid"), primary_key=True),
-                             Column('album_id', Integer, ForeignKey('pixma_album.a_id')))
-    __table__ = Table('pixma_people', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('pixma_people',
+                           Column('user', Integer, ForeignKey('ipb_members.id'), primary_key=True),
+                           Column('picture_id', Integer, ForeignKey("pixma_pics.pid"), primary_key=True),
+                           Column('album_id', Integer, ForeignKey('pixma_album.a_id')))
 
     member = relationship("DbMembers")
     picture = relationship("DbPixPics")
@@ -293,9 +296,9 @@ class DbPixPeople(Base):
 
 
 class DbPixPics(Base):
-    props = ColumnCollection(Column('pid', Integer, primary_key=True),
-                             Column('aid', Integer, ForeignKey('pixma_album.a_id')))
-    __table__ = Table('pixma_pics', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('pixma_pics',
+                           Column('pid', Integer, primary_key=True),
+                           Column('aid', Integer, ForeignKey('pixma_album.a_id')))
 
     album = relationship("DbPixAlbums", backref=backref("pictures"), foreign_keys="DbPixPics.aid")
 
@@ -318,12 +321,12 @@ class DbMessageTopics(Base):
     can delete a message from its "Send" folder, This means only its topic will be
     deleted. The body and the title for the recipient stay alive and can be found.
     """
-    props = ColumnCollection(Column('mt_id', Integer, primary_key=True),
-                             Column('mt_from_id', Integer, ForeignKey('ipb_members.id')),
-                             Column('mt_to_id', Integer, ForeignKey('ipb_members.id')),
-                             Column('mt_owner_id', Integer, ForeignKey('ipb_members.id')),
-                             Column('mt_msg_id', Integer, ForeignKey('ipb_message_text.msg_id')))
-    __table__ = Table('ipb_message_topics', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('ipb_message_topics',
+                           Column('mt_id', Integer, primary_key=True),
+                           Column('mt_from_id', Integer, ForeignKey('ipb_members.id')),
+                           Column('mt_to_id', Integer, ForeignKey('ipb_members.id')),
+                           Column('mt_owner_id', Integer, ForeignKey('ipb_members.id')),
+                           Column('mt_msg_id', Integer, ForeignKey('ipb_message_text.msg_id')))
 
     body = relationship("DbMessageText", backref=backref("headers"))
 
@@ -354,16 +357,16 @@ class DbMessageText(Base):
 
     See DbMessageTopics for more information on the text/topic relationship.
     """
-    props = ColumnCollection(Column('msg_id', Integer, primary_key=True),
-                             Column('msg_author_id', Integer, ForeignKey('ipb_members.id')))
-    __table__ = Table('ipb_message_text', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('ipb_message_text',
+                           Column('msg_id', Integer, primary_key=True),
+                           Column('msg_author_id', Integer, ForeignKey('ipb_members.id')))
 
     author = relationship("DbMembers")
 
 
 class DbGroups(Base):
-    props = ColumnCollection(Column('g_id', Integer, primary_key=True))
-    __table__ = Table('ipb_groups', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('ipb_groups',
+                           Column('g_id', Integer, primary_key=True))
 
 
     @property
@@ -378,9 +381,9 @@ def _split_set(raw_value):
 class DbMembers(Base, user.ApiUser):
     """This handles the ipb_members data within the exma ipb database
     """
-    props = ColumnCollection(Column('id', Integer, primary_key=True),
-                             Column('mgroup', Integer, ForeignKey("ipb_groups.g_id")))
-    __table__ = Table('ipb_members', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('ipb_members',
+                           Column('id', Integer, primary_key=True),
+                           Column('mgroup', Integer, ForeignKey("ipb_groups.g_id")))
 
     converge = relationship("DbMembersConverge", uselist=False)
     extra = relationship("DbMembersExtra", uselist=False)
@@ -477,13 +480,13 @@ class DbMembers(Base, user.ApiUser):
 class DbMembersConverge(Base):
     """Holds the password hash & salt (table ipb_members_converge)
     """
-    props = ColumnCollection(Column('converge_id', Integer, ForeignKey("ipb_members.id"), primary_key=True))
-    __table__ = Table('ipb_members_converge', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('ipb_members_converge',
+                           Column('converge_id', Integer, ForeignKey("ipb_members.id"), primary_key=True))
 
 
 class DbMembersExtra(Base):
-    props = ColumnCollection(Column('id', Integer, ForeignKey("ipb_members.id"), primary_key=True))
-    __table__ = Table('ipb_member_extra', connection.metadata, *props, autoload=True)
+    __table__ = auto_table('ipb_member_extra',
+                           Column('id', Integer, ForeignKey("ipb_members.id"), primary_key=True))
 
     def virtual_dirs(self):
         """Get a wrapper for the virtual message dirs of the user
