@@ -7,6 +7,18 @@ from functools import wraps
 
 
 class EventInterval():
+    """This represents a event date interval.
+
+    It can be parsed from the current request. The start and
+    end date in the request is optional and can be computed.
+
+    If start and end is not given, then  "tomorrow" will be
+    the start date.
+    If end but not start is given, then the start date will
+    be 1 month and one day before the given end date.
+    If the end date is not given it will be one month and one
+    day after the start (computed or given).
+    """
     max_interval = timedelta(days=100)
 
     def __init__(self):
@@ -66,7 +78,7 @@ class EventInterval():
         """get the end date of the interval
 
         :rtype: datetime
-        :return: eThe end date.
+        :return: The end date.
         """
         if self._end is None:
             self._parse()
