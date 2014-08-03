@@ -247,6 +247,10 @@ class DbLocations(Base):
     __table__ = auto_table('exma_locations',
                            Column('lid', Integer, primary_key=True))
 
+    @classmethod
+    def by_id(cls, location_id):
+        return connection.session.query(DbLocations).filter_by(lid=location_id).first()
+
 
 class DbOrganizers(Base):
     """Handles the organizers of events

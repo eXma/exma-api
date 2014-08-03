@@ -61,7 +61,12 @@ class LocationList(restful.Resource):
 
 
 class Location(restful.Resource):
-    pass
+    @marshal_with_fieldset(fieldsets.EventLocationFields)
+    def get(self, location_id):
+        location = mapping.DbLocations.by_id(location_id)
+        if location is None:
+            abort(404, message="Location not found")
+        return location
 
 
 class OrganizerList(restful.Resource):
