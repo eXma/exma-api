@@ -1,4 +1,5 @@
 from api.events.request_parsing import EventInterval, _resolve_category
+from api.request_helper import limit_query, limit_list
 from api.users import authorization
 from api.events import fieldsets
 from flask.ext import restful
@@ -32,13 +33,13 @@ class EventList(restful.Resource):
             event_list.extend(event.instances_between(interval.start,
                                                       interval.end))
 
-        return event_list
+        return limit_list(event_list)
 
 
 class EventCategoryList(restful.Resource):
     @marshal_with_fieldset(fieldsets.EventCategoryFields)
     def get(self):
-        return EventCategory.all_categories()
+        return limit_list(EventCategory.all_categories())
 
 
 class Event(restful.Resource):
@@ -57,7 +58,7 @@ class LocationList(restful.Resource):
     @marshal_with_fieldset(fieldsets.EventLocationFields)
     def get(self):
         location_qry = connection.session.query(mapping.DbLocations)
-        return location_qry.all()
+        return limit_query(location_qry).all()
 
 
 class Location(restful.Resource):
