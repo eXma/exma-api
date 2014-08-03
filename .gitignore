@@ -5,5 +5,5 @@ exma_pw
 .idea/tasks.xml
 .idea/dataSources.*
 mysql-connector-*
-sqlqlchemy-schemadisplay.png
+sqlalchemy-schemadisplay.png
 sqlalchemy-schemadisplay.svg
