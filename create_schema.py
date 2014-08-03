@@ -1,15 +1,15 @@
 import sqlalchemy.exc
 from sqlalchemy_schemadisplay import create_uml_graph
 from sqlalchemy.orm import class_mapper
-import db_backend
+import db_backend.mapping
 
 def fetch_mappers():
     # lets find all the mappers in our model
     mappers = []
-    for attr in dir(db_backend):
+    for attr in dir(db_backend.mapping):
         if attr[0] == '_': continue
         try:
-            cls = getattr(db_backend, attr)
+            cls = getattr(db_backend.mapping, attr)
             mappers.append(class_mapper(cls))
         except Exception as ex:
             if isinstance(ex, sqlalchemy.exc.InvalidRequestError):
@@ -29,5 +29,6 @@ def make_graph(mappers):
 
 mappers = fetch_mappers()
 graph = make_graph(mappers)
-graph.write_png('schema.png') # write out the file
-graph.write_svg('schema.svg') # write out the fil
+
+graph.write_png('sqlalchemy-schemadisplay.png') # write out the file
+graph.write_svg('sqlalchemy-schemadisplay.svg') # write out the file
