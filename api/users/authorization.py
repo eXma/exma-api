@@ -1,4 +1,3 @@
-from db_backend import mapping
 from db_backend.utils.user import ApiUser
 from flask.ext.restful import abort
 from functools import wraps
@@ -28,7 +27,7 @@ def require_login(func):
     return nufun
 
 
-def setup_auth(app):
+def setup_auth(app, user_lookup):
     """Set up the authenticaton module for this app.
 
     :param app: The Flask app
@@ -42,7 +41,7 @@ def setup_auth(app):
         ctx.user = ApiUser()
         user_id = session.get("login_user_id")
         if user_id is not None:
-            user = mapping.DbMembers.by_id(user_id)
+            user = user_lookup(user_id)
             if user is not None and not user.is_banned():
                 ctx.user = user
 

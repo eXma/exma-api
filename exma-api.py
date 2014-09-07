@@ -3,6 +3,7 @@ from api.users import authorization
 from flask import Flask, request
 
 import db_backend.mapping.config
+import db_backend.mapping
 import pixma_images
 
 
@@ -27,7 +28,7 @@ def add_cors_header(resp):
     return resp
 
 
-authorization.setup_auth(app)
+authorization.setup_auth(app, db_backend.mapping.DbMembers.by_id)
 representation.configure_default_json()
 
 @app.route('/')
