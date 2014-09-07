@@ -6,34 +6,48 @@ board into a RESTful web api to build more modern clients for it.
 ## How to run the debug environment:
 
 1. Clone the repo
+
    ```
    git clone git@github.com:janLo/exma-api.git
    ```
+   
 2. create/activate a virtualenv:
+
    ```
    virtualenv </some/path>
    . </some/path>/bin/activate
    ```
+   
 3. install requirenments:
+
    ```
    pip install requirenments.txt
    ```
+   
 4. create a file containing the db password in the project root:
+
    ```
    echo "password" > exma_pw
    ```
+   
 5. build a tunnel to the database:
+
    ```
    ssh -L 3306:localhost:3306 <mysql_host>
    ```
+   
 6. mount the images:
+
    ```
    sshfs user@host:<path_to_pictures> /mnt/tmp
    ```
+   
 7. start the server:
+
    ```
    python exma-api.py
    ```
+   
 8. enjoy!
 
 ## How to turn debug mode on/off:
