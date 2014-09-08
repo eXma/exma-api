@@ -1,5 +1,6 @@
 from flask.ext.restful import fields
 from flask.ext.restful_fieldsets import Fieldset, OptionalNestedField
+from api.users.fieldsets import MemberFields
 
 
 class EventCategoryFields(Fieldset):
@@ -34,4 +35,11 @@ class EventFields(Fieldset):
     location = OptionalNestedField(EventLocationFields, "lid", attribute="location")
 
 
+class OrganizerField(Fieldset):
+    class Meta:
+        default_embedd = ["location"]
 
+    id = fields.Integer(attribute="vid")
+    approved = fields.Boolean
+    location = OptionalNestedField(EventLocationFields, "lid", attribute="location")
+    member = OptionalNestedField(MemberFields, "id", attribute="mid")

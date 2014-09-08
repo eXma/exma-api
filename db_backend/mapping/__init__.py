@@ -263,6 +263,10 @@ class DbOrganizers(Base):
     location = relationship("DbLocations", uselist=False)
     member = relationship("DbMembers", uselist=False)
 
+    @classmethod
+    def by_id(cls, organizer_id):
+        return connection.session.query(DbOrganizers).filter_by(lid=organizer_id).first()
+
 
 class DbPixAlbums(Base):
     __table__ = auto_table('pixma_album',

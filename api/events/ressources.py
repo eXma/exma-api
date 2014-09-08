@@ -71,8 +71,16 @@ class Location(restful.Resource):
 
 
 class OrganizerList(restful.Resource):
-    pass
+    @marshal_with_fieldset(fieldsets.OrganizerField)
+    def get(self):
+        organizer_query = connection.session.query(mapping.DbOrganizers)
+        return limit_query(organizer_query).all()
 
 
 class Organizer(restful.Resource):
-    pass
+    @marshal_with_fieldset(fieldsets.OrganizerField)
+    def get(self, organizer_id):
+        organizer = mapping.DbOrganizers.by_id(organizer_id)
+        if organizer is None:
+            abort(404, message="Organizer not found")
+        return organizer
