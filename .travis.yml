@@ -5,9 +5,8 @@ python:
 cache:
   directories:
     - $HOME/.pip-cache/
-    - /home/travis/virtualenv/python3.3
-    - /home/travis/virtualenv/python3.4
+    - /home/travis/virtualenv/
 # command to install dependencies
-install: "pip install -r requirements.txt"
+install: "pip install -r requirements.txt" --download-cache $HOME/.pip-cache
 # command to run tests
 script: nosetests tests
