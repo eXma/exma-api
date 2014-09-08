@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime, date, time
+from datetime import timedelta, datetime, date, time, timezone
 
 from dateutil.relativedelta import relativedelta
 from db_backend.utils.events import EventCategory
@@ -32,26 +32,26 @@ class EventInterval():
         req_args = parser.parse_args()
 
         if req_args.get("start") is not None:
-            start = datetime.fromtimestamp(req_args.get("start"))
+            start = datetime.utcfromtimestamp(req_args.get("start")).date()
         else:
             start = None
 
         if req_args.get("end") is not None:
-            end = datetime.fromtimestamp(req_args.get("end"))
+            end = datetime.utcfromtimestamp(req_args.get("end")).date()
         else:
             end = None
 
         if start is None:
             if end is None:
-                start = datetime.combine(date.today() + relativedelta(day=1),
-                                         time())
+                start = date.today() + relativedelta(day=1)
             else:
-                start = datetime.combine(end.date() - relativedelta(day=1, months=+1),
-                                         time())
+                start = end - relativedelta(day=1, months=+1)
 
         if end is None:
-            end = datetime.combine(start.date() + relativedelta(months=+1),
-                                   time())
+            end = start + relativedelta(months=+1)
+
+        end = datetime.combine(end, time(tzinfo=timezone.utc))
+        start = datetime.combine(start, time(tzinfo=timezone.utc))
 
         if end < start:
             abort(400, message="start cannot be before end!")

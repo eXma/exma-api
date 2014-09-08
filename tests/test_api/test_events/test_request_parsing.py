@@ -69,32 +69,32 @@ class TestDateIntervalParsing(unittest.TestCase):
         with self.mocked_date(datetime.date(2000, 1, 10)):
             with app.test_request_context('/bubble', query_string='', method="GET"):
                 interval = EventInterval()
-                self.assertEqual(interval.start, datetime.datetime(2000, 1, 1, 0, 0))
-                self.assertEqual(interval.end, datetime.datetime(2000, 2, 1, 0, 0))
+                self.assertEqual(interval.start, datetime.datetime(2000, 1, 1, 0, 0, tzinfo=datetime.timezone.utc))
+                self.assertEqual(interval.end, datetime.datetime(2000, 2, 1, 0, 0, tzinfo=datetime.timezone.utc))
 
     def test_0020_only_end_interval(self):
         app = Flask(__name__)
         with self.mocked_date(datetime.date(2000, 1, 10)):
             with app.test_request_context('/bubble', query_string='end=1010617200', method="GET"):
                 interval = EventInterval()
-                self.assertEqual(interval.start, datetime.datetime(2001, 12, 1, 0, 0))
-                self.assertEqual(interval.end, datetime.datetime(2002, 1, 10, 0, 0))
+                self.assertEqual(interval.start, datetime.datetime(2001, 12, 1, 0, 0, tzinfo=datetime.timezone.utc))
+                self.assertEqual(interval.end, datetime.datetime(2002, 1, 9, 0, 0, tzinfo=datetime.timezone.utc))
 
     def test_0030_only_start_interval(self):
         app = Flask(__name__)
         with self.mocked_date(datetime.date(2000, 1, 10)):
             with app.test_request_context('/bubble', query_string='start=1010617200', method="GET"):
                 interval = EventInterval()
-                self.assertEqual(interval.start, datetime.datetime(2002, 1, 10, 0, 0))
-                self.assertEqual(interval.end, datetime.datetime(2002, 2, 10, 0, 0))
+                self.assertEqual(interval.start, datetime.datetime(2002, 1, 9, 0, 0, tzinfo=datetime.timezone.utc))
+                self.assertEqual(interval.end, datetime.datetime(2002, 2, 9, 0, 0, tzinfo=datetime.timezone.utc))
 
     def test_0040_start_and_end_interval(self):
         app = Flask(__name__)
         with self.mocked_date(datetime.date(2000, 1, 10)):
             with app.test_request_context('/bubble', query_string='start=1010617200&end=1015714800', method="GET"):
                 interval = EventInterval()
-                self.assertEqual(interval.start, datetime.datetime(2002, 1, 10, 0, 0))
-                self.assertEqual(interval.end, datetime.datetime(2002, 3, 10, 0, 0))
+                self.assertEqual(interval.start, datetime.datetime(2002, 1, 9, 0, 0, tzinfo=datetime.timezone.utc))
+                self.assertEqual(interval.end, datetime.datetime(2002, 3, 9, 0, 0, tzinfo=datetime.timezone.utc))
 
     def test_0050_interval_too_long(self):
         app = Flask(__name__)
