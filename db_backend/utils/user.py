@@ -92,7 +92,7 @@ def exma_passhash(password, salt):
     """
     password_hash = hashlib.md5(password.encode("latin1")).hexdigest()
     salt_hash = hashlib.md5(salt.encode("latin1")).hexdigest()
-    return hashlib.md5(salt_hash + password_hash).hexdigest()
+    return hashlib.md5((salt_hash + password_hash).encode("ascii")).hexdigest()
 
 
 class UserBan(object):
