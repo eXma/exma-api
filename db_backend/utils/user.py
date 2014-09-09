@@ -59,6 +59,8 @@ def parse_permissions(permission_array):
     :return: The parsed dict with the permissions.
     """
     parsed = {}
+    if not len(permission_array):
+        return parsed
 
     if isinstance(permission_array, str):
         permission_array = bytes(permission_array, "utf8")
