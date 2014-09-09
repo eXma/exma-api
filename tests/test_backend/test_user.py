@@ -1,5 +1,5 @@
 import unittest
-from db_backend.utils.user import exma_passhash, ApiUser, GUEST_MASK, parse_permissions
+from db_backend.utils.user import exma_passhash, ApiUser, GUEST_MASK, parse_permissions, ForumPermissions
 
 
 class TestPasswordHandling(unittest.TestCase):
@@ -45,10 +45,63 @@ class TestParsePermissions(unittest.TestCase):
 
     def test_0020_parse_unicode(self):
         ref = ('a:5:{s:11:"start_perms";s:20:"3,9,12,15,16,18,4,11";'
-               's:11:"reply_perms";s:20:"3,9,12,15,16,18,4,11"'
-               ';s:10:"read_perms";s:28:"2,3,9,12,15,16,18,22,23,4,11";'
+               's:11:"reply_perms";s:20:"3,9,12,15,16,18,4,11";'
+               's:10:"read_perms";s:28:"2,3,9,12,15,16,18,22,23,4,11";'
                's:12:"upload_perms";s:20:"3,9,12,15,16,18,4,11";'
                's:10:"show_perms";s:28:"2,3,9,12,15,16,18,22,23,4,11";}')
         perms = parse_permissions(ref)
         print(perms)
         self.assertEqual(perms, self.parsed_ref)
+
+    def test_0030_no_permissions(self):
+        perms = parse_permissions("")
+        self.assertEqual(perms, {})
+
+
+class TestForumPermissions(unittest.TestCase):
+    permission_types = (ForumPermissions.PERM_READ,
+                        ForumPermissions.PERM_REPLY,
+                        ForumPermissions.PERM_START,
+                        ForumPermissions.PERM_UPLOAD,
+                        ForumPermissions.PERM_SHOW)
+    permission_full_ref = ('a:5:{'
+                           's:11:"start_perms";s:20:"1,2,3,4,5,6,7,8,9,10";'
+                           's:11:"reply_perms";s:20:"1,2,3,4,5,6,7,8,9,10";'
+                           's:10:"read_perms";s:20:"1,2,3,4,5,6,7,8,9,10";'
+                           's:12:"upload_perms";s:20:"1,2,3,4,5,6,7,8,9,10";'
+                           's:10:"show_perms";s:20:"1,2,3,4,5,6,7,8,9,10";}')
+    permission_empty_ref = ('a:5:{'
+                            's:11:"start_perms";s:0:"";'
+                            's:11:"reply_perms";s:0:"";'
+                            's:10:"read_perms";s:0:"";'
+                            's:12:"upload_perms";s:0:"";'
+                            's:10:"show_perms";s:0:"";}')
+
+    def test_0010_full_positive_single(self):
+        perm = ForumPermissions(self.permission_full_ref)
+        for permission in self.permission_types:
+            for mask in range(1, 11):
+                self.assertTrue(perm.is_fulfilled((mask,), permission))
+
+    def test_0020_full_negative_single(self):
+        perm = ForumPermissions(self.permission_full_ref)
+        for permission in self.permission_types:
+            for mask in (0, 11):
+                self.assertFalse(perm.is_fulfilled((mask,), permission))
+
+    def test_0030_empty_permissions_single(self):
+        perm = ForumPermissions(self.permission_empty_ref)
+        for permission in self.permission_types:
+            for mask in range(0, 11):
+                self.assertFalse(perm.is_fulfilled((mask,), permission))
+
+    def test_0040_test_positive_multi(self):
+        perm = ForumPermissions(self.permission_full_ref)
+        for permission in self.permission_types:
+            self.assertTrue(perm.is_fulfilled((1,2,12), permission))
+
+    def test_0050_no_permissions(self):
+        perm = ForumPermissions("")
+        for permission in self.permission_types:
+            for mask in range(0, 11):
+                self.assertFalse(perm.is_fulfilled((mask,), permission))
