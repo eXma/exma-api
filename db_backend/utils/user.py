@@ -153,7 +153,7 @@ class UserBan(object):
                     start = timestamps.from_db(ban_parts[0])
                     if float(ban_parts[1]) < sys.maxsize:
                         end = timestamps.from_db(ban_parts[1])
-                        duration_hours = ban_parts[2]
+                        duration_hours = int(ban_parts[2])
                         if ban_parts[3] == "d":
                             duration_hours *= 24
                         duration = timedelta(hours=duration_hours)
