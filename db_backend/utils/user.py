@@ -3,6 +3,9 @@ from datetime import datetime, timedelta, MAXYEAR
 import phpserialize
 import sys
 
+
+__all__ = ["ForumPermissions", "UserBan", "ApiUser", "exma_passhash"]
+
 GUEST_MASK = [2]
 
 
