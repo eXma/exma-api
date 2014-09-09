@@ -1,5 +1,5 @@
 import hashlib
-import datetime
+from datetime import datetime, timedelta, MAXYEAR
 import phpserialize
 import sys
 
@@ -118,7 +118,7 @@ class UserBan(object):
         :rtype: bool
         :return: True if active, false else.
         """
-        return self.start < datetime.datetime.now() < self.end
+        return self.start < datetime.now() < self.end
 
     @staticmethod
     def from_banline(db_temp_ban):
@@ -144,15 +144,15 @@ class UserBan(object):
             ban_parts = db_temp_ban.split(":")
             if len(ban_parts) == 4:
                 try:
-                    start = datetime.datetime.fromtimestamp(int(ban_parts[0]))
+                    start = datetime.fromtimestamp(int(ban_parts[0]))
                     if float(ban_parts[1]) < sys.maxsize:
-                        end = datetime.datetime.fromtimestamp(int(ban_parts[1]))
+                        end = datetime.fromtimestamp(int(ban_parts[1]))
                         duration_hours = ban_parts[2]
                         if ban_parts[3] == "d":
                             duration_hours *= 24
-                        duration = datetime.timedelta(hours=duration_hours)
+                        duration = timedelta(hours=duration_hours)
                     else:
-                        end = datetime.datetime(year=datetime.MAXYEAR, day=31, month=12)
+                        end = datetime(year=MAXYEAR, day=31, month=12)
                         duration = end - start
                     return UserBan(start, end, duration)
                 except ValueError:
