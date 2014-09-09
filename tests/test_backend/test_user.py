@@ -128,7 +128,15 @@ class TestUserBanning(unittest.TestCase):
         ban = UserBan.from_banline(self._make_ban(now - timedelta(days=3), now - timedelta(days=1), unit="h"))
         self.assertFalse(ban.is_active())
 
-    def test_0020_ban_not_started(self):
+    def test_0030_ban_not_started(self):
         now = timestamps.now_datetime()
         ban = UserBan.from_banline(self._make_ban(now + timedelta(days=3), now + timedelta(days=1), unit="h"))
         self.assertFalse(ban.is_active())
+
+    def test_0040_ban_empty(self):
+        ban = UserBan.from_banline("")
+        self.assertIsNone(ban)
+
+    def test_0050_ban_null(self):
+        ban = UserBan.from_banline("0")
+        self.assertIsNone(ban)
