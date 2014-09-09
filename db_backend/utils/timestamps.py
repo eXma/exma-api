@@ -8,7 +8,7 @@ timezone = pytz.utc
 def from_db(timestamp):
     if isinstance(timestamp, str):
         timestamp = int(timestamp)
-    return datetime.utcfromtimestamp(timestamp).replace(timezone)
+    return datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone)
 
 
 def to_db(time):
