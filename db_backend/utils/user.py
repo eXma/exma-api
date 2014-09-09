@@ -1,7 +1,9 @@
-import hashlib
-from datetime import datetime, timedelta, MAXYEAR
-import phpserialize
+from datetime import timedelta, MAXYEAR
 import sys
+
+import hashlib
+import phpserialize
+
 from db_backend.utils import timestamps
 
 
@@ -122,7 +124,7 @@ class UserBan(object):
         :rtype: bool
         :return: True if active, false else.
         """
-        return self.start < datetime.utcnow() < self.end
+        return self.start < timestamps.now_datetime() < self.end
 
     @staticmethod
     def from_banline(db_temp_ban):
@@ -156,7 +158,7 @@ class UserBan(object):
                             duration_hours *= 24
                         duration = timedelta(hours=duration_hours)
                     else:
-                        end = datetime(year=MAXYEAR, day=31, month=12, tzinfo=timestamps.timezone)
+                        end = timestamps.new_datetime(year=MAXYEAR, day=31, month=12)
                         duration = end - start
                     return UserBan(start, end, duration)
                 except ValueError:
