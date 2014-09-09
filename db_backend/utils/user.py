@@ -124,6 +124,17 @@ class UserBan(object):
     def from_banline(db_temp_ban):
         """Parses a user temp_ban line from the db and create a UserBan instance
 
+        A banline is a string of four parts separated by a colon.
+        The first part is the start of the ban, encoded as unix
+        epoch timestamp. The second is the end of the ban, also
+        encoded as unix epoch timestamp. The third is the duration
+        of the ban. The duration are either hours or days. The unit
+        is told by the fourth part, which is either a "h" for hour
+        or a "d" for days.
+
+        I don't know which diseased mind thought this would be a
+        good format...
+
         :type db_temp_ban: str or unicode
         :param db_temp_ban:
         :rtype: UserBan or None
