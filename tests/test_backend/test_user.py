@@ -1,5 +1,7 @@
+from datetime import MAXYEAR, timedelta
 import unittest
-from db_backend.utils.user import exma_passhash, ApiUser, GUEST_MASK, parse_permissions, ForumPermissions
+from db_backend.utils import timestamps
+from db_backend.utils.user import exma_passhash, ApiUser, GUEST_MASK, parse_permissions, ForumPermissions, UserBan
 
 
 class TestPasswordHandling(unittest.TestCase):
@@ -98,10 +100,35 @@ class TestForumPermissions(unittest.TestCase):
     def test_0040_test_positive_multi(self):
         perm = ForumPermissions(self.permission_full_ref)
         for permission in self.permission_types:
-            self.assertTrue(perm.is_fulfilled((1,2,12), permission))
+            self.assertTrue(perm.is_fulfilled((1, 2, 12), permission))
 
     def test_0050_no_permissions(self):
         perm = ForumPermissions("")
         for permission in self.permission_types:
             for mask in range(0, 11):
                 self.assertFalse(perm.is_fulfilled((mask,), permission))
+
+
+class TestUserBanning(unittest.TestCase):
+    def _make_ban(self, start, end=None, duration=9999, unit="d"):
+        if not end:
+            end = timestamps.new_datetime(year=MAXYEAR, day=31, month=12)
+
+        return "%d:%d:%d:%s" % (start.timestamp(),
+                                end.timestamp(),
+                                duration,
+                                unit)
+
+    def test_0010_ban_active(self):
+        ban = UserBan.from_banline(self._make_ban(timestamps.now_datetime() - timedelta(days=1)))
+        self.assertTrue(ban.is_active())
+
+    def test_0020_ban_expired(self):
+        now = timestamps.now_datetime()
+        ban = UserBan.from_banline(self._make_ban(now - timedelta(days=3), now - timedelta(days=1), unit="h"))
+        self.assertFalse(ban.is_active())
+
+    def test_0020_ban_not_started(self):
+        now = timestamps.now_datetime()
+        ban = UserBan.from_banline(self._make_ban(now + timedelta(days=3), now + timedelta(days=1), unit="h"))
+        self.assertFalse(ban.is_active())
