@@ -7,7 +7,7 @@ from sqlalchemy import Table, Column, Integer, ForeignKey, and_, or_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref, joinedload
 from db_backend.utils.message import DirList
-from db_backend.utils import user
+from db_backend.utils import user, timestamps
 
 
 
@@ -173,11 +173,11 @@ class DbEvents(Base):
 
     @property
     def start_date(self):
-        return datetime.datetime.fromtimestamp(self.start)
+        return timestamps.from_db(self.start)
 
     @property
     def end_date(self):
-        return datetime.datetime.fromtimestamp(self.end)
+        return timestamps(self.end)
 
     @property
     def recurrence_interval(self):
