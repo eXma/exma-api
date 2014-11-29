@@ -1,6 +1,6 @@
 # eXma API
 
-[![Build Status](https://travis-ci.org/janLo/exma-api.svg)](https://travis-ci.org/janLo/exma-api)
+[![Build Status](https://travis-ci.org/eXma/exma-api.svg)](https://travis-ci.org/eXma/exma-api)
 
 This is a attempt to wrap a ancient invision power
 board into a RESTful web api to build more modern clients for it.
